@@ -1,3 +1,4 @@
 module.exports = {
-  URI: "mongodb+srv://kumarnikhil2060:password33@cluster0.qsi43.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+  // URI: "mongodb+srv://shuklapriyanshu9:testpassword@th-db.qdt4h.mongodb.net",
+  URI: "mongodb+srv://saurabhdestroyer98:A6gQyMohbYBBa1Xa@techheavendb.qw1dx.mongodb.net/",
 };

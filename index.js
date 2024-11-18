@@ -1,6 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
+const cors = require('cors');
 const {
   auth_route,
   user_route,
@@ -17,13 +17,15 @@ const {
 
 const app = express();
 
+app.use(cors());
+
 // Middleware
-app.use(
-  cors({
-    origin: "http://localhost:5173", // Replace with your frontend origin
-    credentials: true, // Allows cookies to be sent with requests
-  })
-);
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173", // Replace with your frontend origin
+//     credentials: true, // Allows cookies to be sent with requests
+//   })
+// );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
