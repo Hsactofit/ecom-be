@@ -1,13 +1,25 @@
 const express = require('express');
 const router = express.Router();
+const cartController = require('../controllers/CartController');
 
-const { CartController } = require('../controllers');
-const { authenticationVerifier, accessLevelVerifier, isAdminVerifier } = require('../middlewares/verifyToken');
+// Get cart items
+router.get('/:userId', cartController.getCart);
 
-router.get('/', isAdminVerifier, CartController.get_carts);
-router.get('/:userId', accessLevelVerifier, CartController.get_cart)
-router.post('/', authenticationVerifier, CartController.create_cart);
-router.put('/:id', accessLevelVerifier, CartController.update_cart);
-router.delete('/:id', accessLevelVerifier, CartController.delete_cart);
+// Add item to cart
+router.post('/add', cartController.addToCart);
+
+// Update cart item
+router.put('/update', cartController.updateCartItem);
+
+// Remove item from cart
+router.delete('/:userId/item/:productId', cartController.removeFromCart);
+
+// Check if product in cart
+router.get('/:userId/check/:productId', cartController.isProductInCart);
+
+// Get products with cart status
+router.get('/products/:userId', cartController.getProductsWithCartStatus);
+
+router.delete('/clear/:userId', cartController.clearCart);
 
 module.exports = router;

@@ -31,4 +31,12 @@ const wishlistSchema = new mongoose.Schema(
 
 const Wishlist = mongoose.model("Wishlist", wishlistSchema);
 
+wishlistSchema.statics.isProductInWishlist = async function(userId, productId) {
+    const count = await this.countDocuments({
+        userId,
+        'items.productId': productId
+    });
+    return count > 0;
+};
+
 module.exports = Wishlist;
