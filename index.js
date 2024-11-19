@@ -18,18 +18,20 @@ const {
 const app = express();
 
 // Middleware
-app.use(
-  cors({
-    origin: "http://localhost:5173", // Replace with your frontend origin
-    credentials: true, // Allows cookies to be sent with requests
-  })
-);
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173", // Replace with your frontend origin
+//     credentials: true, // Allows cookies to be sent with requests
+//   })
+// );
+
+app.use(cors("*"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/api/v1/auth", auth_route); // Public routes
-app.use("/api/v1/users", authenticationVerifier, user_route); // Protected routes
+app.use("/api/v1/users", user_route); // Protected routes
 app.use("/api/v1/products", product_route); // Public routes
 app.use("/api/v1/carts", authenticationVerifier, cart_route); // Protected routes
 app.use("/api/v1/orders", authenticationVerifier, order_route); // Protected routes

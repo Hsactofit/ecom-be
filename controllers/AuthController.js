@@ -55,6 +55,7 @@ const AuthController = {
           phone: user.phone,
           role: user.role,
           dateJoined: user.dateJoined,
+          code: token,
         },
       });
     } catch (err) {
@@ -100,6 +101,7 @@ const AuthController = {
           phone: user.phone,
           role: user.role,
           lastLogin: user.lastLogin,
+          token: token,
         },
       });
     } catch (err) {
