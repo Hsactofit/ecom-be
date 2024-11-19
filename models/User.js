@@ -40,23 +40,23 @@ const userSchema = new mongoose.Schema(
       enum: ["customer", "seller", "admin"],
       default: "customer",
     },
-    cart: [
-      {
-        productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-        quantity: { type: Number, default: 1 },
-      },
-    ],
-    wishlist: [
-      {
-        productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-      },
-    ],
-    orderHistory: [
-      {
-        orderId: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
-        purchaseDate: { type: Date },
-      },
-    ],
+    // cart: [
+    //   {
+    //     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+    //     quantity: { type: Number, default: 1 },
+    //   },
+    // ],
+    // wishlist: [
+    //   {
+    //     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+    //   },
+    // ],
+    // orderHistory: [
+    //   {
+    //     orderId: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
+    //     purchaseDate: { type: Date },
+    //   },
+    // ],
     paymentMethods: [
       {
         cardType: { type: String, required: true },
@@ -90,6 +90,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model("EcomUser", userSchema);
 
 module.exports = User;

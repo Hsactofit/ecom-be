@@ -1,105 +1,104 @@
-const Cart = require('../models/Cart');
-
-const CartController = {
-
-    /* get all carts (only admin) */
-    async get_carts(req, res) {
+const Product = require("../models/Product");
+const cartService = require('../services/cartService');
+const cartController = {
+    async getCart(req, res) {
         try {
-            const carts = await Cart.find();
-            res.status(200).json({
-                type: "success",
-                carts
-            })
-        } catch (err) {
-            res.status(500).json({
-                type: "error",
-                message: "Something went wrong please try again",
-                err
-            })
+            const cart = await cartService.getUserCart(req.params.userId);
+            res.json(cart?.items || []);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
         }
     },
 
-    /* get user cart */
-    async get_cart(req, res) {
+    async addToCart(req, res) {
         try {
-            const cart = await Cart.findOne({ userId: req.params.userId});
-            if (!cart) {
-                res.status(404).json({
-                    type: "error",
-                    message: "User doesn't exists"
-                })
-            } else {
-                res.status(200).json({
-                    type: "success",
-                    cart
-                })
-            }
-        } catch (err) {
-            res.status(500).json({
-                type: "error",
-                message: "Something went wrong please try again",
-                err
-            })
+            const { userId, productId, quantity } = req.body;
+            const cart = await cartService.addItem(userId, productId, quantity);
+            res.json(cart);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
         }
     },
 
-    /* add product to cart */
-    async create_cart(req, res) {
-        const newCart = new Cart(req.body);
+    async updateCartItem(req, res) {
         try {
-            const savedCart = await newCart.save();
-            res.status(201).json({
-                type: "success",
-                message: "Product added successfully",
-                savedCart
-            })
-        } catch (err) {
-            res.status(500).json({
-                type: "error",
-                message: "Something went wrong please try again",
-                err
-            })
+            const { userId, productId, quantity } = req.body;
+            const cart = await cartService.updateItem(userId, productId, quantity);
+            res.json(cart);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
         }
     },
 
-    /* update product */
-    async update_cart(req, res) {
+    async removeFromCart(req, res) {
         try {
-            const updatedCart = await Cart.findByIdAndUpdate(req.params.id, {
-                $set: req.body
-            },
-                { new: true }
+            const cart = await cartService.removeItem(
+                req.params.userId, 
+                req.params.productId
             );
-            res.status(200).json({
-                type: "success",
-                message: "Cart updated successfully",
-                updatedCart
-            })
-        } catch (err) {
-            res.status(500).json({
-                type: "error",
-                message: "Something went wrong please try again",
-                err
-            })
+            res.json(cart);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
         }
     },
 
-    /* delete cart */
-    async delete_cart(req, res) {
+    async isProductInCart(req, res) {
         try {
-            await Cart.findOneAndDelete(req.params.id);
-            res.status(200).json({
-                type: "success",
-                message: "Product has been deleted successfully"
+            const result = await cartService.checkItemInCart(
+                req.params.userId, 
+                req.params.productId
+            );
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    },
+
+    async getProductsWithCartStatus(req, res) {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const skip = (page - 1) * limit;
+
+            const cart = await cartService.getCartItems(req.params.userId);
+            const cartItems = cart?.items || [];
+
+            const [products, total] = await Promise.all([
+                Product.find().skip(skip).limit(limit).lean(),
+                Product.countDocuments()
+            ]);
+
+            const productsWithCartInfo = products.map(product => {
+                const cartItem = cartItems.find(item => 
+                    item.productId.toString() === product._id.toString()
+                );
+                return {
+                    ...product,
+                    inCart: !!cartItem,
+                    quantity: cartItem?.quantity || 0
+                };
             });
-        } catch (err) {
-            res.status(500).json({
-                type: "error",
-                message: "Something went wrong please try again",
-                err
-            })
+
+            res.json({
+                products: productsWithCartInfo,
+                pagination: {
+                    total,
+                    page,
+                    pages: Math.ceil(total / limit)
+                }
+            });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    },
+    async clearCart(req, res) {
+        try {
+            const cart = await cartService.clearCart(req.params.userId);
+            res.json({ success: true, message: 'Cart cleared successfully' });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
         }
     }
 };
 
-module.exports = CartController;
+module.exports = cartController;

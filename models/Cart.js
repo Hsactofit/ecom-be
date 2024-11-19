@@ -18,18 +18,9 @@ const cartSchema = new mongoose.Schema(
           type: Number,
           required: true,
           default: 1,
-        },
-        price: {
-          type: Number,
-          required: true,
-        },
+        }
       },
     ],
-    totalAmount: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
     status: {
       type: String,
       enum: ["active", "completed", "abandoned"],

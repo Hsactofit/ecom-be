@@ -1,12 +1,14 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
+const cors = require('cors');
 const {
   auth_route,
   user_route,
   product_route,
   cart_route,
   order_route,
+  cartRoute,
+  wishlistRoute,
 } = require("./routes");
 const dbConfig = require("./config/database-config");
 const {
@@ -16,6 +18,8 @@ const {
 } = require("./middlewares/verifyToken");
 
 const app = express();
+
+app.use(cors());
 
 // Middleware
 // app.use(
@@ -33,7 +37,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/v1/auth", auth_route); // Public routes
 app.use("/api/v1/users", user_route); // Protected routes
 app.use("/api/v1/products", product_route); // Public routes
-app.use("/api/v1/carts", authenticationVerifier, cart_route); // Protected routes
+app.use("/api/v1/carts", cartRoute); // Protected routes
+app.use("/api/v1/wishlist", wishlistRoute); // Protected routes
 app.use("/api/v1/orders", authenticationVerifier, order_route); // Protected routes
 
 // Database Connection
