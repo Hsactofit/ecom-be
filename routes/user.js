@@ -6,9 +6,13 @@ const { authenticateToken, isVerified, checkRole } = require('../middleware/auth
 
 router.put('/:userId/role', authenticateToken, isVerified, UserController.updateUserRole);
 
-router.get('/', authenticateToken, isVerified, checkRole('admin'), UserController.getUsersByRole);
+router.get('/', UserController.getUserById);
+
+// router.get('/', authenticateToken, isVerified, checkRole('admin'), UserController.getUsersByRole);
 
 router.put('/:userId/business-profile', authenticateToken, isVerified, UserController.updateBusinessProfile);
+
+
 
 
 module.exports = router;

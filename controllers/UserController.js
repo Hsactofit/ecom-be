@@ -83,6 +83,24 @@ class UserController {
             });
         }
     }
+
+    async getUserById(req, res) {
+        try {
+            const { userId } = req.query;
+            
+            const user = await UserService.getUsersById(userId);
+
+            res.json({
+                success: true,
+                user
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
 }
 
 module.exports = new UserController();

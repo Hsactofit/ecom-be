@@ -126,6 +126,28 @@ class UserService {
             throw error;
         }
     }
+
+    async getUsersById(userId) {
+        try {
+            console.log('[UserService getUsersById Started]:', {
+                userId,
+                timestamp: new Date().toISOString()
+            });
+
+
+            const user = await User.findById(userId).select('-password');
+
+            console.log('[UserService getUsersById Success]:', {
+                user,
+                timestamp: new Date().toISOString()
+            });
+
+            return user;
+        } catch (error) {
+            logError('getUsersById', error, { role, status });
+            throw error;
+        }
+    }
 }
 
 module.exports = new UserService();

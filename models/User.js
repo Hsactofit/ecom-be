@@ -92,7 +92,18 @@ const userSchema = new mongoose.Schema(
                 }
             },
             default: null
-        }
+        },
+        cart: [
+            {
+              productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+              quantity: { type: Number, default: 1 },
+            },
+          ],
+        wishlist: [
+            {
+              productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+            },
+        ]
     },
     { timestamps: true }
 );
