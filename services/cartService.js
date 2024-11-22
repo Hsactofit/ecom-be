@@ -1,5 +1,6 @@
 const Cart = require("../models/Cart");
 const User = require("../models/User");
+const Product = require('../models/Product');
 
 const { logError } = require('../utils/logError');
 
@@ -19,14 +20,14 @@ const cartService = {
         }
     },
 
-    async addItem(userId, productId, quantity = 1) {
+    async addItem(userId, productId, quantity) {
         try {
             if (!userId || !productId || typeof quantity !== 'number') {
                 throw new Error('Invalid input for adding item');
             }
-    
+            
             const cart = await Cart.findOne({ userId, status: 'active' });
-    
+            
             if (cart) {
                 // Check if the product already exists in the cart
                 const existingItem = cart.items.find(item => item.productId.toString() === productId);
@@ -38,7 +39,17 @@ const cartService = {
                     // Add a new product to the cart
                     cart.items.push({ productId, quantity });
                 }
-    
+                
+                const product = await Product.findById(productId).session(session);
+
+                if (!product) {
+                    
+                    throw new Error('Product not Found!');
+                }
+
+                if (quantity > product.stock) {
+                    throw new Error(`Cannot update quantity. Only ${product.stock} units available in stock!`);
+                }
                 // Save the updated cart
                 const updatedCart = await cart.save();
                 await updatedCart.populate('items.productId');
@@ -71,6 +82,18 @@ const cartService = {
             if (quantity <= 0) {
                 return this.removeItem(userId, productId);
             }
+
+            const product = await Product.findById(productId).session(session);
+
+            if (!product) {
+                
+                throw new Error('Product not Found!');
+            }
+
+            if (quantity > product.stock) {
+                throw new Error(`Cannot update quantity. Only ${product.stock} units available in stock!`);
+            }
+
             const updatedCart = await Cart.findOneAndUpdate(
                 { userId, status: 'active', 'items.productId': productId },
                 { $set: { 'items.$.quantity': quantity } },

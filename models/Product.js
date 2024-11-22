@@ -99,6 +99,11 @@ const ProductSchema = new mongoose.Schema(
         warranty: {
             months: Number,
             description: String
+        },
+        quantity:{
+            type:Number,
+            required: true,
+            default:1
         }
     },
     {
