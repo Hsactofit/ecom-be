@@ -1,24 +1,15 @@
 const express = require('express');
 const router = express.Router();
 
-// Import all route files
 const authRoutes = require('./auth');
-// const userRoutes = require('./user');
-// const sellerRoutes = require('./seller');
-// const adminRoutes = require('./admin');
-// const paymentRoutes = require('./payment');
-// const addressRoutes = require('./address');
+const productRoutes = require('./product');
 
 // API versioning
 const API_VERSION = '/api/v1';
 
 // Mount routes
 router.use(`${API_VERSION}/auth`, authRoutes);
-// router.use(`${API_VERSION}/users`, userRoutes);
-// router.use(`${API_VERSION}/sellers`, sellerRoutes);
-// router.use(`${API_VERSION}/admin`, adminRoutes);
-// router.use(`${API_VERSION}/payments`, paymentRoutes);
-// router.use(`${API_VERSION}/address`, addressRoutes);
+router.use(`${API_VERSION}/products`, productRoutes);
 
 // Health check route
 router.get(`${API_VERSION}/health`, (req, res) => {
