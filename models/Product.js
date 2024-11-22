@@ -96,10 +96,6 @@ const ProductSchema = new mongoose.Schema(
             enum: ['active', 'inactive', 'deleted'],
             default: 'active'
         },
-        storeLocation: {
-            type: String,
-            required: true
-        },
         warranty: {
             months: Number,
             description: String
