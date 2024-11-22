@@ -3,12 +3,14 @@ const router = express.Router();
 
 const authRoutes = require('./auth');
 const productRoutes = require('./product');
+const userRoutes = require('./user');
 
 // API versioning
 const API_VERSION = '/api/v1';
 
 // Mount routes
 router.use(`${API_VERSION}/auth`, authRoutes);
+router.use(`${API_VERSION}/users`, userRoutes);
 router.use(`${API_VERSION}/products`, productRoutes);
 
 // Health check route
