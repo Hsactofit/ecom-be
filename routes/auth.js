@@ -1,9 +1,21 @@
-const express = require("express");
+// routes/auth.js
+const express = require('express');
 const router = express.Router();
+const AuthController = require('../controllers/AuthController');
+const { authenticateToken, isVerified, checkRole } = require('../middleware/auth');
 
-const { AuthController } = require("../controllers");
+// Public routes
+router.post('/signup', AuthController.signup);
+router.post('/login', AuthController.login);
+router.post('/google/signin', AuthController.googleSignIn);
+router.get('/verify-email/:token', AuthController.verifyEmail);
+router.post('/verify-phone', AuthController.verifyPhone);
 
-router.post("/register", AuthController.create_user);
-router.post("/login", AuthController.login_user);
+// Protected routes
+router.post('/resend-verification', authenticateToken, AuthController.resendVerification);
+
+// Example of protected routes with role check
+// router.get('/admin/users', authenticateToken, isVerified, checkRole('admin'), AuthController.getAllUsers);
+// router.get('/seller/dashboard', authenticateToken, isVerified, checkRole('seller', 'reseller'), AuthController.getSellerDashboard);
 
 module.exports = router;

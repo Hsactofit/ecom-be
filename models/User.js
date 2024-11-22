@@ -1,95 +1,119 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
-  {
-    fullname: {
-      type: String,
-      required: true,
-      trim: true,
+    {
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+            lowercase: true,
+            trim: true,
+        },
+        phone: {
+            type: String,
+            required: true,
+            unique: true,
+        },
+        password: {
+            type: String,
+            required: true,
+        },
+        emailVerified: {
+            type: Boolean,
+            default: false
+        },
+        emailVerificationToken: String,
+        emailVerificationExpires: Date,
+        phoneVerified: {
+            type: Boolean,
+            default: false
+        },
+        phoneVerificationCode: String,
+        phoneVerificationExpires: Date,
+        address: [{
+            fullName: String,
+            phone: String,
+            streetAddress: String,
+            city: String,
+            state: String,
+            zipCode: String,
+            country: String,
+            isDefault: { type: Boolean, default: false },
+        }],
+        isVerified: {
+            type: Boolean,
+            default: false
+        },
+        role: {
+            type: String,
+            enum: ["customer", "seller", "admin", "reseller"],
+            default: "customer",
+        },
+        paymentMethods: [{
+            cardType: String,
+            cardNumber: String,
+            expiryDate: String,
+            cardHolderName: String,
+            isDefault: { type: Boolean, default: false },
+        }],
+        profilePictureUrl: String,
+        darkMode: { type: Boolean, default: false },
+        lastLogin: Date,
+        resetToken: String,
+        resetTokenExpiration: Date,
+        status:{
+            type: String,
+            enum: ["PENDING", "ACCEPTED", "REJECTED"],
+            default: "PENDING",
+        },
+        businessProfile: {
+            type: {
+                storeName: String,
+                description: String,
+                location: String,
+                rating: {
+                    average: { type: Number, default: 0 },
+                    count: { type: Number, default: 0 }
+                },
+                bankDetails: {
+                    accountHolder: String,
+                    accountNumber: String,
+                    bankName: String,
+                    ifscCode: String
+                },
+                earnings: {
+                    total: { type: Number, default: 0 },
+                    pending: { type: Number, default: 0 }
+                }
+            },
+            default: null
+        }
     },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    phone: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    address: [
-      {
-        fullName: { type: String, required: true },
-        phone: { type: String, required: true },
-        streetAddress: { type: String, required: true },
-        city: { type: String, required: true },
-        state: { type: String, required: true },
-        zipCode: { type: String, required: true },
-        country: { type: String, required: true },
-        isDefault: { type: Boolean, default: false },
-      },
-    ],
-    role: {
-      type: String,
-      enum: ["customer", "seller", "admin"],
-      default: "customer",
-    },
-    // cart: [
-    //   {
-    //     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-    //     quantity: { type: Number, default: 1 },
-    //   },
-    // ],
-    // wishlist: [
-    //   {
-    //     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-    //   },
-    // ],
-    // orderHistory: [
-    //   {
-    //     orderId: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
-    //     purchaseDate: { type: Date },
-    //   },
-    // ],
-    paymentMethods: [
-      {
-        cardType: { type: String, required: true },
-        cardNumber: { type: String, required: true },
-        expiryDate: { type: String, required: true },
-        cardHolderName: { type: String, required: true },
-        isDefault: { type: Boolean, default: false },
-      },
-    ],
-    profilePictureUrl: {
-      type: String,
-    },
-    darkMode: {
-      type: Boolean,
-      default: false,
-    },
-    dateJoined: {
-      type: Date,
-      default: Date.now,
-    },
-    lastLogin: {
-      type: Date,
-    },
-    resetToken: {
-      type: String,
-    },
-    resetTokenExpiration: {
-      type: Date,
-    },
-  },
-  { timestamps: true }
+    { timestamps: true }
 );
 
-const User = mongoose.model("users", userSchema);
+// Middleware to handle role change to seller/reseller
+userSchema.pre('save', function(next) {
+    if (this.isModified('role') && (this.role === 'seller' || this.role === 'reseller') && !this.businessProfile) {
+        this.businessProfile = {
+            storeName: '',
+            description: '',
+            location: '',
+            rating: { average: 0, count: 0 },
+            bankDetails: {},
+            earnings: { total: 0, pending: 0 }
+        };
+    }
 
-module.exports = User;
+    // Update isVerified based on email and phone verification
+    this.isVerified = this.emailVerified && this.phoneVerified;
+
+    next();
+});
+
+module.exports = mongoose.model("User", userSchema);
