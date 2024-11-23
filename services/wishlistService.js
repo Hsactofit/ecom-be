@@ -1,14 +1,38 @@
 const Wishlist = require('../models/Wishlist');
 const User = require('../models/User');
+const ProductGetService = require('../services/product/ProductSearchService');
 const {logError} = require('../utils/logError'); // Logging utility
 
 const wishlistService = {
     async getWishlist(userId) {
         try {
-            const wishlist = await Wishlist.findOne({ userId })
-                .populate('items.productId')
-                .lean();
-            return wishlist || { items: [] }; // Return empty items if no wishlist found
+        const wishlist = await Wishlist.findOne({ userId })
+            .lean();
+            const productsWithDetails = await Promise.all(
+                wishlist.items.map(async (item) => {
+                    try {
+                        const product = await ProductGetService.getProductById(item.productId);
+                        return {
+                            ...item,
+                            productDetails: product
+                        };
+                    } catch (error) {
+                        console.log(`Failed to fetch product details for productId: ${item.productId}`, error);
+                        // Return the item without details if product fetch fails
+                        return {
+                            ...item,
+                            productDetails: null,
+                            error: 'Product details unavailable'
+                        };
+                    }
+                })
+            );
+
+            return {
+                ...wishlist,
+                items: productsWithDetails
+            };
+            
         } catch (error) {
             logError('getWishlist', error, { userId });
             throw new Error('Failed to retrieve wishlist');
@@ -29,7 +53,7 @@ const wishlistService = {
                 { userId },
                 { $addToSet: { items: { productId } } }, // Prevent duplicates
                 { upsert: true, new: true } // Create wishlist if not exists
-            ).populate('items.productId');
+            );
     
             // Update the user's wishlist in the User schema (if applicable)
             await this.updateUserWishlist(userId, productId);
@@ -61,7 +85,7 @@ const wishlistService = {
                 { userId },
                 { $pull: { items: { productId } } }, // Remove the product from items
                 { new: true }
-            ).populate('items.productId');
+            );
     
             // Update the user's wishlist in the User schema (if applicable)
             await this.updateUserWishlist(userId, productId, 'remove');

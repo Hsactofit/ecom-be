@@ -29,16 +29,6 @@ const orderSchema = new mongoose.Schema(
             type: Number,
             required: true
         },
-        paymentMethod: {
-            type: String,
-            enum: ['Credit Card', 'Debit Card', 'PayPal', 'Cash on Delivery', 'Bank Transfer'],
-            required: true
-        },
-        paymentStatus: {
-            type: String,
-            enum: ['Paid', 'Unpaid', 'Refunded'],
-            required: true
-        },
         status: {
             type: String,
             enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'],

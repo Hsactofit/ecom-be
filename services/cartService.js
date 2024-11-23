@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Product = require('../models/Product');
 
 const { logError } = require('../utils/logError');
+const ProductSearchService = require("./product/ProductSearchService");
 
 const cartService = {
     async getUserCart(userId) {
@@ -11,9 +12,31 @@ const cartService = {
                 throw new Error('Invalid userId');
             }
             const cart = await Cart.findOne({ userId, status: 'active' })
-                .populate('items.productId')
                 .lean();
-            return cart;
+            const productsWithDetails = await Promise.all(
+                cart.items.map(async (item) => {
+                    try {
+                        const product = await this.getProductById(item.productId);
+                        return {
+                            ...item,
+                            productDetails: product
+                        };
+                    } catch (error) {
+                        console.log(`Failed to fetch product details for productId: ${item.productId}`, error);
+                        // Return the item without details if product fetch fails
+                        return {
+                            ...item,
+                            productDetails: null,
+                            error: 'Product details unavailable'
+                        };
+                    }
+                })
+            );
+
+            return {
+                ...cart,
+                items: productsWithDetails
+            };
         } catch (error) {
             logError('getUserCart', error, { userId });
             throw error;
@@ -40,7 +63,7 @@ const cartService = {
                     cart.items.push({ productId, quantity });
                 }
                 
-                const product = await Product.findById(productId).session(session);
+                const product = await ProductSearchService.getProductById(productId);
 
                 if (!product) {
                     
@@ -52,9 +75,7 @@ const cartService = {
                 }
                 // Save the updated cart
                 const updatedCart = await cart.save();
-                await updatedCart.populate('items.productId');
                 await this.updateUserCart(userId, productId, quantity);
-                console.log(updatedCart);
                 return updatedCart;
             } else {
                 // Create a new cart if it doesn't exist
@@ -64,7 +85,6 @@ const cartService = {
                     items: [{ productId, quantity }]
                 });
                 const savedCart = await newCart.save();
-                await savedCart.populate('items.productId');
                 await this.updateUserCart(userId, productId, quantity);
                 return savedCart;
             }
@@ -83,7 +103,7 @@ const cartService = {
                 return this.removeItem(userId, productId);
             }
 
-            const product = await Product.findById(productId).session(session);
+            const product = await ProductSearchService.getProductById(productId);
 
             if (!product) {
                 
@@ -98,7 +118,7 @@ const cartService = {
                 { userId, status: 'active', 'items.productId': productId },
                 { $set: { 'items.$.quantity': quantity } },
                 { new: true }
-            ).populate('items.productId');
+            );
             await this.updateUserCart(userId, productId, quantity);
             return updatedCart;
         } catch (error) {
@@ -116,7 +136,7 @@ const cartService = {
                 { userId, status: 'active' },
                 { $pull: { items: { productId } } },
                 { new: true }
-            ).populate('items.productId');
+            );
             await this.updateUserCart(userId, productId, quantity = 0);
             return updatedCart;
         } catch (error) {

@@ -10,7 +10,7 @@ const orderService = {
     async createOrderFromCart(userId, shippingAddress, paymentMethod) {
         try {
             // Fetch the active cart for the user
-            const cart = await Cart.findOne({ userId, status: 'active' }).populate('items.productId');
+            const cart = await Cart.findOne({ userId, status: 'active' })
 
             if (!cart || cart.items.length === 0) {
                 throw new Error('Cart is empty');
@@ -97,11 +97,36 @@ const orderService = {
 
     async getOrderById(orderId) {
         try {
-            const order = await Order.findById(orderId).populate('items.productId');
+            const order = await Order.findById(orderId);
+
+            const productsWithDetails = await Promise.all(
+                wishlist.items.map(async (item) => {
+                    try {
+                        const product = await this.getProductById(item.productId);
+                        return {
+                            ...item,
+                            productDetails: product
+                        };
+                    } catch (error) {
+                        console.log(`Failed to fetch product details for productId: ${item.productId}`, error);
+                        // Return the item without details if product fetch fails
+                        return {
+                            ...item,
+                            productDetails: null,
+                            error: 'Product details unavailable'
+                        };
+                    }
+                })
+            );
+
             if (!order) {
                 throw new Error('Order not found');
             }
-            return order;
+            
+            return {
+                ...order,
+                items: productsWithDetails
+            };
         } catch (error) {
             logError('getOrderById', error, { orderId });
             throw new Error('Failed to retrieve order');
@@ -110,7 +135,7 @@ const orderService = {
 
     async getUserOrders(userId) {
         try {
-            const orders = await Order.find({ userId }).sort({ createdAt: -1 }).populate('items.productId');
+            const orders = await Order.find({ userId }).sort({ createdAt: -1 })
             return orders;
         } catch (error) {
             logError('getUserOrders', error, { userId });
