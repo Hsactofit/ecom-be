@@ -13,6 +13,13 @@ router.get('/', UserController.getUserById);
 router.put('/:userId/business-profile', authenticateToken, isVerified, UserController.updateBusinessProfile);
 
 
+// Accept user
+router.patch('/:userId/accept', UserController.acceptUser);
 
+// Reject user
+router.patch('/:userId/reject', UserController.rejectUser);
+
+// Get all sellers
+router.get('/sellers', UserController.getAllSellers);
 
 module.exports = router;

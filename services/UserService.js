@@ -148,6 +148,33 @@ class UserService {
             throw error;
         }
     }
+
+    async updateVerificationStatus(userId, isVerified){
+        try {
+            const user = await User.findByIdAndUpdate(
+                userId,
+                {
+                    isVerified,
+                    status: isVerified ? 'ACCEPTED' : 'REJECTED'
+                },
+                { new: true } // Return the updated document
+            );
+    
+            return user;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    };
+
+    async getAllSellers(){
+        try {
+            // Filter users with the role of 'seller'
+            const sellers = await User.find({ role: 'seller' }).select('-password'); // Exclude password from the response
+            return sellers;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    };
 }
 
 module.exports = new UserService();

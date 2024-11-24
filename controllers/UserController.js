@@ -101,6 +101,50 @@ class UserController {
             });
         }
     }
+
+    async acceptUser(req, res) {
+        try {
+            const { userId } = req.params;
+            const user = await UserService.updateVerificationStatus(userId, true);
+
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            return res.status(200).json({ message: 'User accepted successfully', user });
+        } catch (error) {
+            return res.status(500).json({ message: 'Error accepting user', error: error.message });
+        }
+    }
+
+    async rejectUser(req, res) {
+        try {
+            const { userId } = req.params;
+            const user = await UserService.updateVerificationStatus(userId, false);
+
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            return res.status(200).json({ message: 'User rejected successfully', user });
+        } catch (error) {
+            return res.status(500).json({ message: 'Error rejecting user', error: error.message });
+        }
+    }
+
+    async getAllSellers(req,res) {
+        try {
+            const sellers = await UserService.getAllSellers();
+
+            if (!sellers.length) {
+                return res.status(404).json({ message: 'No sellers found' });
+            }
+
+            return res.status(200).json({ message: 'Sellers retrieved successfully', sellers });
+        } catch (error) {
+            return res.status(500).json({ message: 'Error retrieving sellers', error: error.message });
+        }
+    }
 }
 
 module.exports = new UserController();

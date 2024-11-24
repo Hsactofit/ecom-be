@@ -73,6 +73,50 @@ class ProductController {
             });
         }
     }
+
+    async acceptProduct(req, res) {
+        try {
+            const { productId } = req.params;
+            const product = await ProductService.updateVerificationStatus(productId, true);
+
+            if (!product) {
+                return res.status(404).json({ message: 'Product not found' });
+            }
+
+            return res.status(200).json({ message: 'Product accepted successfully', product });
+        } catch (error) {
+            return res.status(500).json({ message: 'Error accepting product', error: error.message });
+        }
+    }
+
+    async rejectProduct(req, res) {
+        try {
+            const { productId } = req.params;
+            const product = await ProductService.updateVerificationStatus(productId, false);
+
+            if (!product) {
+                return res.status(404).json({ message: 'Product not found' });
+            }
+
+            return res.status(200).json({ message: 'Product rejected successfully', product });
+        } catch (error) {
+            return res.status(500).json({ message: 'Error rejecting product', error: error.message });
+        }
+    }
+
+    async getAllProducts(req, res) {
+        try {
+            const products = await ProductService.getAllProducts();
+
+            if (!products.length) {
+                return res.status(404).json({ message: 'No products found' });
+            }
+
+            return res.status(200).json({ message: 'Products retrieved successfully', products });
+        } catch (error) {
+            return res.status(500).json({ message: 'Error retrieving products', error: error.message });
+        }
+    }
 }
 
 class ResellProductController {

@@ -26,4 +26,13 @@ router.delete('/resell/:resellProductId', authenticateToken, checkRole('reseller
 router.get('/search', productSearchController.searchProducts);
 router.get('/:productId', productSearchController.getProductById);
 
+// Accept product
+router.patch('/:productId/accept', productController.acceptProduct);
+
+// Reject product
+router.patch('/:productId/reject', productController.rejectProduct);
+
+// Get all products
+router.get('/', productController.getAllProducts);
+
 module.exports = router;

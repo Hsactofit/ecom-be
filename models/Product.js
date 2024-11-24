@@ -40,6 +40,10 @@ const ProductSchema = new mongoose.Schema(
             url: String,
             alt: String,
         }],
+        isVerified: {
+            type:Boolean,
+            default:false
+        },
         category: {
             type: String,
             enum: ['GPU', 'RAM', 'SSD', 'HDD', 'CPU', 'Motherboard', 'MiningRig', 'ASIC'],
@@ -94,7 +98,7 @@ const ProductSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: ['active', 'inactive', 'deleted'],
-            default: 'active'
+            default: 'inactive'
         },
         warranty: {
             months: Number,

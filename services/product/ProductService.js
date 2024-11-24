@@ -132,6 +132,35 @@ class ProductService {
             throw error;
         }
     }
+    
+    async updateVerificationStatus(productId, isVerified) {
+        try {
+            const product = await Product.findByIdAndUpdate(
+                productId,
+                { 
+                    isVerified, 
+                    status: isVerified ? 'active' : 'abandoned' 
+                },
+                { new: true }
+            );
+    
+            return product;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    };
+
+    async getAllProducts() {
+        try {
+            // Fetch all products
+            const products = await Product.find()
+                .populate('seller', 'name email') // Populate seller details (name and email)
+                .select('-__v'); // Exclude the `__v` field from the response
+            return products;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    };
 
 }
 
