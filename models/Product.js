@@ -20,7 +20,7 @@ const VariantSchema = new mongoose.Schema({
         percentage: Number,
         validUntil: Date
     }
-});
+}, {_id: false});
 
 const ProductSchema = new mongoose.Schema(
     {
