@@ -126,6 +126,7 @@ class ProductSearchService {
 
     async searchProducts(searchQuery, options = {}) {
         try {
+            // Ensure page and limit are numbers with default values
             const {
                 page = 1,
                 limit = 10,
@@ -138,6 +139,10 @@ class ProductSearchService {
                 includeResell = true
             } = options;
 
+            // Convert to numbers and ensure positive values
+            const pageNum = Math.max(1, Number(page));
+            const limitNum = Math.max(1, Number(limit));
+
             const logContext = {
                 searchQuery,
                 options,
@@ -149,15 +154,32 @@ class ProductSearchService {
             const baseQuery = this._buildBaseQuery(searchQuery, category, brand);
             const priceQuery = this._buildPriceQuery(minPrice, maxPrice);
 
-            // Fetch products
+            // First, get total counts without pagination
+            const [totalOriginalCount, totalResellCount] = await Promise.all([
+                Product.countDocuments({
+                    ...baseQuery,
+                    ...priceQuery
+                }),
+                includeResell ? ResellProduct.countDocuments({
+                    ...baseQuery,
+                    ...priceQuery
+                }) : 0
+            ]);
+
+            const totalCount = totalOriginalCount + (includeResell ? totalResellCount : 0);
+
+            // Calculate proper skip value based on total results
+            const skipValue = (pageNum - 1) * limitNum;
+
+            // Fetch products with pagination
             const [originalProducts, resellProducts] = await Promise.all([
                 Product.find({
                     ...baseQuery,
                     ...priceQuery
                 })
                     .populate('seller', 'name phone')
-                    .skip((page - 1) * limit)
-                    .limit(limit)
+                    .skip(skipValue)
+                    .limit(limitNum)
                     .sort({ [sortBy]: sortOrder }),
 
                 includeResell ? ResellProduct.find({
@@ -178,8 +200,8 @@ class ProductSearchService {
                             select: 'name phone'
                         }
                     ])
-                    .skip((page - 1) * limit)
-                    .limit(limit)
+                    .skip(skipValue)
+                    .limit(limitNum)
                     .sort({ [sortBy]: sortOrder }) : []
             ]);
 
@@ -191,25 +213,24 @@ class ProductSearchService {
                     .map(rp => this._normalizeProductResponse(rp.originalProduct, true, rp))
             ];
 
-            // Sort and paginate
+            // Sort combined products
             combinedProducts = this._sortProducts(combinedProducts, sortBy, sortOrder);
-            const total = combinedProducts.length;
-            combinedProducts = combinedProducts.slice((page - 1) * limit, page * limit);
 
             console.log('[ProductSearchService searchProducts Success]:', {
                 ...logContext,
                 totalResults: combinedProducts.length,
                 originalCount: originalProducts.length,
-                resellCount: resellProducts.length
+                resellCount: resellProducts.length,
+                totalCount
             });
 
             return {
                 products: combinedProducts,
                 pagination: {
-                    total,
-                    page: Number(page),
-                    limit: Number(limit),
-                    pages: Math.ceil(total / limit)
+                    total: totalCount,
+                    page: pageNum,
+                    limit: limitNum,
+                    pages: Math.ceil(totalCount / limitNum)
                 }
             };
         } catch (error) {

@@ -7,7 +7,7 @@ class ProductController {
         try {
             const productData = {
                 ...req.body,
-                seller: req.user.id // Assuming user ID is set by auth middleware
+                seller: req.user.id
             };
 
             const product = await ProductService.createProduct(productData);

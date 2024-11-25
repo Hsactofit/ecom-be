@@ -39,7 +39,7 @@ const ProductSchema = new mongoose.Schema(
         images: [{
             url: String,
             alt: String,
-        }],
+        }, {_id: false}],
         isVerified: {
             type:Boolean,
             default:false
