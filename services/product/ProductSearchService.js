@@ -25,6 +25,7 @@ class ProductSearchService {
             slug: isResell ? resellData.slug : baseProduct.slug,
             description: baseProduct.description || '',
             images: baseProduct.images || [],
+            isVerified: baseProduct.isVerified || false,
             category: baseProduct.category,
             specifications: {
                 memoryType: baseProduct.specifications?.memoryType || null,
@@ -35,11 +36,17 @@ class ProductSearchService {
                 algorithm: baseProduct.specifications?.algorithm || [],
                 supportedCoins: baseProduct.specifications?.supportedCoins || []
             },
-            variants: isResell ? resellData.variants : baseProduct.variants,
+            variants: (isResell ? resellData.variants : baseProduct.variants)?.map(variant => ({
+                memorySize: variant.memorySize || null,
+                price: variant.price || 0,
+                stock: variant.stock || 0,
+                discount: variant.discount || null
+            })) || [],
             rating: baseProduct.rating || { average: 0, reviews: [] },
             brand: baseProduct.brand,
             status: isResell ? resellData.status : baseProduct.status,
             warranty: baseProduct.warranty || {},
+            quantity: baseProduct.quantity || 1,
             createdAt: isResell ? resellData.createdAt : baseProduct.createdAt,
             updatedAt: isResell ? resellData.updatedAt : baseProduct.updatedAt
         };
@@ -142,6 +149,7 @@ class ProductSearchService {
             // Convert to numbers and ensure positive values
             const pageNum = Math.max(1, Number(page));
             const limitNum = Math.max(1, Number(limit));
+            const skip = (pageNum - 1) * limitNum;
 
             const logContext = {
                 searchQuery,
@@ -153,39 +161,25 @@ class ProductSearchService {
 
             const baseQuery = this._buildBaseQuery(searchQuery, category, brand);
             const priceQuery = this._buildPriceQuery(minPrice, maxPrice);
+            const finalQuery = { ...baseQuery, ...priceQuery };
 
             // First, get total counts without pagination
             const [totalOriginalCount, totalResellCount] = await Promise.all([
-                Product.countDocuments({
-                    ...baseQuery,
-                    ...priceQuery
-                }),
-                includeResell ? ResellProduct.countDocuments({
-                    ...baseQuery,
-                    ...priceQuery
-                }) : 0
+                Product.countDocuments(finalQuery),
+                includeResell ? ResellProduct.countDocuments(finalQuery) : 0
             ]);
 
             const totalCount = totalOriginalCount + (includeResell ? totalResellCount : 0);
 
-            // Calculate proper skip value based on total results
-            const skipValue = (pageNum - 1) * limitNum;
-
             // Fetch products with pagination
             const [originalProducts, resellProducts] = await Promise.all([
-                Product.find({
-                    ...baseQuery,
-                    ...priceQuery
-                })
+                Product.find(finalQuery)
                     .populate('seller', 'name phone')
-                    .skip(skipValue)
+                    .skip(skip)
                     .limit(limitNum)
                     .sort({ [sortBy]: sortOrder }),
 
-                includeResell ? ResellProduct.find({
-                    ...baseQuery,
-                    ...priceQuery
-                })
+                includeResell ? ResellProduct.find(finalQuery)
                     .populate([
                         {
                             path: 'originalProduct',
@@ -200,13 +194,13 @@ class ProductSearchService {
                             select: 'name phone'
                         }
                     ])
-                    .skip(skipValue)
+                    .skip(skip)
                     .limit(limitNum)
                     .sort({ [sortBy]: sortOrder }) : []
             ]);
 
-            // Normalize all products
-            let combinedProducts = [
+            // Filter out resell products with no original product and normalize all products
+            const normalizedProducts = [
                 ...originalProducts.map(p => this._normalizeProductResponse(p, false)),
                 ...resellProducts
                     .filter(rp => rp.originalProduct)
@@ -214,18 +208,18 @@ class ProductSearchService {
             ];
 
             // Sort combined products
-            combinedProducts = this._sortProducts(combinedProducts, sortBy, sortOrder);
+            const sortedProducts = this._sortProducts(normalizedProducts, sortBy, sortOrder);
 
             console.log('[ProductSearchService searchProducts Success]:', {
                 ...logContext,
-                totalResults: combinedProducts.length,
+                totalResults: normalizedProducts.length,
                 originalCount: originalProducts.length,
                 resellCount: resellProducts.length,
                 totalCount
             });
 
             return {
-                products: combinedProducts,
+                products: sortedProducts,
                 pagination: {
                     total: totalCount,
                     page: pageNum,
@@ -262,11 +256,16 @@ class ProductSearchService {
     _sortProducts(products, sortBy, sortOrder) {
         return [...products].sort((a, b) => {
             if (sortBy === 'price') {
-                const aPrice = Math.min(...a.variants.map(v => v.price));
-                const bPrice = Math.min(...b.variants.map(v => v.price));
+                const aPrice = Math.min(...(a.variants?.map(v => v.price) || [0]));
+                const bPrice = Math.min(...(b.variants?.map(v => v.price) || [0]));
                 return (aPrice - bPrice) * sortOrder;
             }
-            return (a[sortBy] - b[sortBy]) * sortOrder;
+
+            if (sortBy === 'createdAt' || sortBy === 'updatedAt') {
+                return ((new Date(a[sortBy])) - (new Date(b[sortBy]))) * sortOrder;
+            }
+
+            return ((a[sortBy] || 0) - (b[sortBy] || 0)) * sortOrder;
         });
     }
 }
