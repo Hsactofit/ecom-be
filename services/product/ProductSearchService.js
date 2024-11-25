@@ -128,7 +128,7 @@ class ProductSearchService {
         try {
             const {
                 page = 1,
-                limit = 10,
+                limit = 6,
                 category,
                 brand,
                 minPrice,
