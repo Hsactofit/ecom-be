@@ -1,6 +1,5 @@
 const Cart = require("../models/Cart");
 const User = require("../models/User");
-const Product = require('../models/Product');
 
 const { logError } = require('../utils/logError');
 const ProductSearchService = require("./product/ProductSearchService");
@@ -16,7 +15,7 @@ const cartService = {
             const productsWithDetails = await Promise.all(
                 cart.items.map(async (item) => {
                     try {
-                        const product = await this.getProductById(item.productId);
+                        const product = await ProductSearchService.getProductById(item.productId);
                         return {
                             ...item,
                             productDetails: product
