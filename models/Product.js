@@ -37,7 +37,7 @@ const ProductSchema = new mongoose.Schema(
         slug: String,
         description: String,
         images: [{
-            url: String,
+            type: String,
             alt: String,
         }],
         isVerified: {
