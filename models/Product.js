@@ -37,9 +37,9 @@ const ProductSchema = new mongoose.Schema(
         slug: String,
         description: String,
         images: [{
-            type: String,
+            url: String,
             alt: String,
-        }],
+        }, {_id: false}],
         isVerified: {
             type:Boolean,
             default:false
