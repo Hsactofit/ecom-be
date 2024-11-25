@@ -20,7 +20,7 @@ const ResellVariantSchema = new mongoose.Schema({
         percentage: Number,
         validUntil: Date
     }
-});
+},  {_id: false});
 
 const ResellProductSchema = new mongoose.Schema(
     {
