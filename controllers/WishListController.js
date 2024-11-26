@@ -79,7 +79,7 @@ const wishlistController = {
     },
 
     async removeFromWishlist(req, res) {
-        const { userId, productId } = req.params;
+        const { userId, productId } = req.body;
 
         if (!validateObjectId(userId) || !validateObjectId(productId)) {
             return res.status(400).json({
