@@ -9,13 +9,13 @@ router.get('/:userId', cartController.getCart);
 router.get('/items/:userId', cartController.getCartItems);
 
 // Add item to cart
-router.post('/add', cartController.addToCart);
+router.post('/', cartController.addToCart);
 
 // Update cart item
 router.put('/update', cartController.updateCartItem);
 
 // Remove item from cart (now includes variantIndex)
-router.delete('/:userId/item/:productId/:variantIndex', cartController.removeFromCart);
+router.delete('/', cartController.removeFromCart);
 
 // Check if product variant in cart
 router.get('/:userId/check/:productId/:variantIndex', cartController.isProductInCart);

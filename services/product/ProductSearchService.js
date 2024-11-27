@@ -138,7 +138,7 @@ class ProductSearchService {
             // Ensure page and limit are numbers with default values
             const {
                 page = 1,
-                limit = 6,
+                limit = 9,
                 category,
                 brand,
                 minPrice,
@@ -164,9 +164,10 @@ class ProductSearchService {
             const baseQuery = this._buildBaseQuery(searchQuery, category, brand);
             const priceQuery = this._buildPriceQuery(minPrice, maxPrice);
             const finalQuery = { ...baseQuery, ...priceQuery };
-
+            console.log("final",finalQuery);
             // First, get total counts without pagination
             const [totalOriginalCount, totalResellCount] = await Promise.all([
+                
                 Product.countDocuments(finalQuery),
                 includeResell ? ResellProduct.countDocuments(finalQuery) : 0
             ]);
@@ -242,7 +243,10 @@ class ProductSearchService {
         const query = { status: { $ne: 'deleted' } };
         if (searchQuery) query.title = { $regex: searchQuery, $options: 'i' };
         if (category) query.category = category;
-        if (brand) query.brand = brand;
+        if (brand) {
+            const brands = brand.split(',');
+            query.brand = brands.length > 0 ? { $in: brands.map(b => new RegExp(b, 'i')) } : { $regex: brand, $options: 'i' };
+        }
         return query;
     }
 

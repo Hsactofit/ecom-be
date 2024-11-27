@@ -1,4 +1,5 @@
 const cartService = require('../services/cartService');
+const ProductSearchService = require('../services/product/ProductSearchService');
 
 const cartController = {
     async getCart(req, res) {
@@ -25,14 +26,16 @@ const cartController = {
 
     async addToCart(req, res) {
         try {
-            const { userId, productId, variantIndex, quantity, productPrice } = req.body;
+            let { userId, productId, quantity, productPrice } = req.body;
+            
+            const variantIndex = parseInt(req.body.variantIndex) || 0;
             if (!userId || !productId || typeof variantIndex !== 'number') {
                 return res.status(400).json({
                     success: false,
                     message: 'UserId, productId, and variantIndex are required'
                 });
             }
-            const cart = await cartService.addItem(userId, productId, variantIndex, quantity || 1, productPrice);
+            const cart = await cartService.addItem(userId, productId, variantIndex || 0, quantity || 1, productPrice);
             if (!cart || cart.items.length === 0) {
                 return res.status(200).json({
                     success: true,
@@ -91,9 +94,9 @@ const cartController = {
 
     async removeFromCart(req, res) {
         try {
-            const { userId, productId } = req.params;
-            const variantIndex = parseInt(req.params.variantIndex);
-
+            const { userId, productId } = req.body;
+            const variantIndex = parseInt(req.body.variantIndex) || 0;
+            console.log(userId, productId, variantIndex);
             if (!userId || !productId || isNaN(variantIndex)) {
                 return res.status(400).json({
                     success: false,
