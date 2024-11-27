@@ -19,6 +19,12 @@ const VariantSchema = new mongoose.Schema({
     discount: {
         percentage: Number,
         validUntil: Date
+    },
+    minPrice: {
+        type: Number
+    },
+    minQuantity: {
+        type: Number
     }
 }, {_id: false});
 
@@ -41,8 +47,8 @@ const ProductSchema = new mongoose.Schema(
             alt: String,
         }, {_id: false}],
         isVerified: {
-            type:Boolean,
-            default:false
+            type: Boolean,
+            default: false
         },
         category: {
             type: String,
@@ -104,23 +110,23 @@ const ProductSchema = new mongoose.Schema(
             months: Number,
             description: String
         },
-        quantity:{
-            type:Number,
+        quantity: {
+            type: Number,
             required: true,
-            default:1
+            default: 1
         }
     },
     {
         timestamps: true,
-        toJSON: { virtuals: true },
+        toJSON: {virtuals: true},
     }
 );
 
 // Compound index for seller and title uniqueness
-ProductSchema.index({ seller: 1, title: 1 }, { unique: true });
+ProductSchema.index({seller: 1, title: 1}, {unique: true});
 
 // Simple slug generator
-ProductSchema.pre("save", function(next) {
+ProductSchema.pre("save", function (next) {
     this.slug = this.title.toLowerCase().replace(/[^a-z0-9]/g, "-");
     next();
 });

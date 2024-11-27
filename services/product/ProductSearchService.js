@@ -39,6 +39,8 @@ class ProductSearchService {
             variants: (isResell ? resellData.variants : baseProduct.variants)?.map(variant => ({
                 memorySize: variant.memorySize || null,
                 price: variant.price || 0,
+                minPrice: variant.minPrice || 10000000,
+                minQuantity: variant.minQuantity || 100,
                 stock: variant.stock || 0,
                 discount: variant.discount || null
             })) || [],
