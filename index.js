@@ -55,15 +55,28 @@ mongoose
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
-  // Example: Handle incoming events
+  // Handle seller request notification
   socket.on("becomeSellerRequest", (data) => {
     console.log("New seller request received:", data);
-
-    // Emit notification to all connected admin clients
     io.emit("newNotification", {
+      type: "SELLER_REQUEST",
       title: "New Seller Request",
-      message: `User ${data.customerName} wants to become a seller.`,
+      message: `${data.customerName} has requested to become seller`,
       requestId: data.requestId,
+      timestamp: new Date(),
+    });
+  });
+
+  // Handle product approval request notification
+  socket.on("productApprovalRequest", (data) => {
+    console.log("New product approval request received:", data);
+    io.emit("newNotification", {
+      type: "PRODUCT_REQUEST",
+      title: "New Product Request",
+      message: `${data.businessName} has made a product request`,
+      requestId: data.requestId,
+      productId: data.productId,
+      timestamp: new Date(),
     });
   });
 
