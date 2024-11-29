@@ -1,12 +1,13 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
-const authRoutes = require("./auth");
-const productRoutes = require("./product");
-const userRoutes = require("./user");
-const cartRoutes = require("./cart");
-const wishlistRoutes = require("./wishlist");
 const orderRoutes = require("./order");
+const authRoutes = require('./auth');
+const productRoutes = require('./product');
+const userRoutes = require('./user');
+const cartRoutes = require('./cart');
+const wishlistRoutes = require('./wishlist');
+const negotiatedProductRoutes = require('./negotiatedProduct');
 
 // API versioning
 const API_VERSION = "/api/v1";
@@ -18,6 +19,8 @@ router.use(`${API_VERSION}/products`, productRoutes);
 router.use(`${API_VERSION}/cart`, cartRoutes);
 router.use(`${API_VERSION}/wishlist`, wishlistRoutes);
 router.use(`${API_VERSION}/order`, orderRoutes);
+router.use(`${API_VERSION}/negotiated`, negotiatedProductRoutes);
+
 
 // Health check route
 router.get(`${API_VERSION}/health`, (req, res) => {

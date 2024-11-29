@@ -4,7 +4,8 @@ const UserController = require('../controllers/UserController');
 const { authenticateToken, isVerified, checkRole } = require('../middleware/auth');
 
 
-router.put('/:userId/role', authenticateToken, isVerified, UserController.updateUserRole);
+router.put('/:userId/role', UserController.updateUserRole);
+// router.put('/:userId/role', authenticateToken, isVerified, UserController.updateUserRole);
 
 router.get('/', UserController.getUserById);
 

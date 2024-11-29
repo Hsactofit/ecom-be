@@ -8,7 +8,8 @@ class ProductSearchService {
         if (!seller) return null;
         return {
             name: seller.name || '',
-            phone: seller.phone || ''
+            phone: seller.phone || '',
+            id: seller._id || ''
         };
     }
 
