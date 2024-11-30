@@ -148,7 +148,6 @@ class ProductSearchService {
                 sortOrder = -1,
                 includeResell = true
             } = options;
-
             // Convert to numbers and ensure positive values
             const pageNum = Math.max(1, Number(page));
             const limitNum = Math.max(1, Number(limit));
@@ -244,10 +243,15 @@ class ProductSearchService {
         const query = { status: { $ne: 'deleted' } };
         if (searchQuery) query.title = { $regex: searchQuery, $options: 'i' };
         if (category) query.category = category;
+        if (category) {
+            const brands = category.split(',');
+            query.category = brands.length > 0 ? { $in: brands.map(b => new RegExp(b, 'i')) } : { $regex: brand, $options: 'i' };
+        }
         if (brand) {
             const brands = brand.split(',');
             query.brand = brands.length > 0 ? { $in: brands.map(b => new RegExp(b, 'i')) } : { $regex: brand, $options: 'i' };
         }
+        console.log("new query",query);
         return query;
     }
 
