@@ -124,6 +124,48 @@ const orderController = {
             });
         }
     },
+    async updateProductOrderStatus(req, res) {
+        try {
+            const { orderId, itemId } = req.params;
+            const { status,sellerId } = req.body;
+
+            // Validate input
+            if (!orderId || !itemId || !status) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Order ID, Item ID and status are required"
+                });
+            }
+
+            // Validate status enum
+            const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'];
+            if (!validStatuses.includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid status value"
+                });
+            }
+
+            const updatedOrder = await orderService.updateProductOrderStatus(
+                orderId,
+                itemId,
+                sellerId,
+                status
+            );
+            console.log( updatedOrder);
+            return res.status(200).json({
+                success: true,
+                message: "Product order status updated successfully"
+            });
+
+        } catch (error) {
+            console.error("Error in updateProductOrderStatus:", error);
+            return res.status(error.message.includes('not found' || 'not authorized') ? 404 : 500).json({
+                success: false,
+                message: error.message || "Error updating product order status"
+            });
+        }
+    },
 
     async getUserOrders(req, res) {
         const { userId } = req.params;

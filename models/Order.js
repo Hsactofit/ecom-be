@@ -18,7 +18,6 @@ const productOrderSchema = new mongoose.Schema(
         },
         shippedAt: {
             type: Date,
-            default: Date.now
         },
         deliveredAt: {
             type: Date
@@ -27,6 +26,13 @@ const productOrderSchema = new mongoose.Schema(
             type: Date,
             default: Date.now
         },
+        cancelledAt: {
+            type: Date
+        },
+        returnedAt: {
+            type: Date
+        },
+        
         product_order_status: {
             type: String,
             enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'],

@@ -113,6 +113,86 @@ const orderService = {
         }
     },
 
+    async updateProductOrderStatus(orderId, itemId, sellerId, newStatus) {
+        try {
+            // Find the order and ensure the product belongs to the seller
+            const order = await Order.findOne(
+                {
+                    _id: orderId
+                }
+            ).populate('items.productId');
+            
+            console.log(order); // Optional: Can be removed or replaced with a logger
+            
+            if (!order) {
+                throw new Error('Order or item not found');
+            }
+    
+            const result = order.items.map((item, index) => ({
+                index,
+                item
+            })).find(result => result.item.productId._id.toString() === itemId);
+            
+            const { index: itemIndex, item } = result;
+            
+            if (item.productId.seller.toString() !== sellerId) {
+                throw new Error('Seller is not authorized to update this product status.');
+            }
+    
+            if (itemIndex === -1) {
+                throw new Error('Item not found in order');
+            }
+    
+            // Create update object
+            const updateObj = {
+                [`items.${itemIndex}.product_order_status`]: newStatus
+            };
+    
+            // Add timestamps if needed
+            if (newStatus === 'Shipped') {
+                updateObj[`items.${itemIndex}.shippedAt`] = new Date();
+            }
+            if (newStatus === 'Delivered') {
+                updateObj[`items.${itemIndex}.deliveredAt`] = new Date();
+            }
+            if (newStatus === 'Cancelled') {
+                updateObj[`items.${itemIndex}.cancelledAt`] = new Date();
+            }
+            if (newStatus === 'Returned') {
+                updateObj[`items.${itemIndex}.returnedAt`] = new Date();
+            }
+    
+            // Update the order
+            const updatedOrder = await Order.findOneAndUpdate(
+                { _id: orderId },
+                { $set: updateObj },
+                { 
+                    new: true,
+                    runValidators: true
+                }
+            ).populate('items.productId');
+    
+            // Check if all items are delivered to update order status
+            const allItemsDelivered = updatedOrder.items.every(
+                item => item.product_order_status === 'Delivered'
+            );
+    
+            if (allItemsDelivered) {
+                updatedOrder.order_status = 'Completed';    
+                await updatedOrder.save();
+            }
+    
+            // Log the successful update
+            console.log(`Order ${orderId} - Item ${itemId} status updated to ${newStatus}`);
+            return updatedOrder;
+    
+        } catch (error) {
+            // Log error with relevant details
+            logError('updateProductOrderStatus', error, { orderId, itemId, sellerId, newStatus });
+            throw new Error('Failed to update product order status');
+        }
+    },
+    
     async getOrderById(orderId) {
         try {
             const order = await Order.findById(orderId);
