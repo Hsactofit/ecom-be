@@ -15,7 +15,7 @@ const wishlistController = {
         try {
             const wishlist = await wishlistService.getWishlist(userId);
 
-            if (!wishlist || wishlist.items.length === 0) {
+            if (!wishlist || wishlist?.items?.length === 0) {
                 return res.status(200).json({
                     success: true,
                     data: [],

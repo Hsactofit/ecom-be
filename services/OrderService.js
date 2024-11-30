@@ -3,6 +3,7 @@ const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const ProductSearchService = require('../services/product/ProductSearchService');
 const {logError} = require('../utils/logError');
+const mongoose = require('mongoose');
 
 const orderService = {
     /**
@@ -28,13 +29,21 @@ const orderService = {
                 items: cart.items.map(item => ({
                     productId: item.productId._id,
                     quantity: item.quantity,
-                    price: item.productId.price
+                    price: item.productId.price,
+                    placedAt: Date.now(),
+                    product_order_status: 'Processing'
                 })),
                 totalAmount,
-                paymentMethod,
-                shippingAddress,
-                status:"Pending",
-                placedAt: Date.now()
+                order_status: 'Pending',  // Changed from status to order_status
+                shippingAddress: {
+                    fullName: shippingAddress.fullName,
+                    phone: shippingAddress.phone,
+                    streetAddress: shippingAddress.streetAddress,
+                    city: shippingAddress.city,
+                    state: shippingAddress.state,
+                    zipCode: shippingAddress.zipCode,
+                    country: shippingAddress.country
+                }
             });
 
             // Save the order
@@ -76,14 +85,22 @@ const orderService = {
                     {
                         productId: product._id,
                         quantity,
-                        price: product.price
+                        price: product.price,
+                        placedAt: Date.now(),
+                        product_order_status: 'Processing'
                     }
                 ],
                 totalAmount,
-                paymentMethod,
-                shippingAddress,
-                status:"Pending",
-                placedAt: Date.now()
+                order_status: 'Pending',  // Changed from status to order_status
+                shippingAddress: {
+                    fullName: shippingAddress.fullName,
+                    phone: shippingAddress.phone,
+                    streetAddress: shippingAddress.streetAddress,
+                    city: shippingAddress.city,
+                    state: shippingAddress.state,
+                    zipCode: shippingAddress.zipCode,
+                    country: shippingAddress.country
+                }
             });
 
             // Save the order
@@ -136,14 +153,94 @@ const orderService = {
 
     async getUserOrders(userId) {
         try {
-            const orders = await Order.find({ userId }).sort({ createdAt: -1 })
+            console.log(userId);
+            const orders = await Order.find({ userId })
+                                .sort({ createdAt: -1 })
+                                .populate('items.productId');
+            console.log(orders[0].items);
             return orders;
         } catch (error) {
             logError('getUserOrders', error, { userId });
             throw new Error('Failed to retrieve user orders');
         }
     },
+    async getSellerOrderSummary(orders) {
+        return {
+            totalOrders: orders.length,
+            totalProductsSold: orders.reduce((acc, order) => 
+                acc + order.items.reduce((sum, item) => sum + item.quantity, 0), 0),
+            totalRevenue: orders.reduce((acc, order) => 
+                acc + order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0), 0),
+            statusBreakdown: orders.reduce((acc, order) => {
+                order.items.forEach(item => {
+                    acc[item.product_order_status] = (acc[item.product_order_status] || 0) + 1;
+                });
+                return acc;
+            }, {})
+        };
+    },
 
+    async getSellerOrders(sellerId) {
+        const orders = await Order.aggregate([
+            // Unwind the items array
+            { $unwind: "$items" },
+            
+            // Lookup product details
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "items.productId",
+                    foreignField: "_id",
+                    as: "productDetails"
+                }
+            },
+            
+            // Unwind product details
+            { $unwind: "$productDetails" },
+            
+            // Filter for specific seller
+            {
+                $match: {
+                    "productDetails.seller": new mongoose.Types.ObjectId(sellerId)
+                }
+            },
+            
+            // Group back by order
+            {
+                $group: {
+                    _id: "$_id",
+                    userId: { $first: "$userId" },
+                    totalAmount: { $first: "$totalAmount" },
+                    order_status: { $first: "$order_status" },
+                    shippingAddress: { $first: "$shippingAddress" },
+                    createdAt: { $first: "$createdAt" },
+                    updatedAt: { $first: "$updatedAt" },
+                    items: {
+                        $push: {
+                            _id: "$items._id",
+                            productId: "$productDetails",
+                            quantity: "$items.quantity",
+                            price: "$items.price",
+                            shippedAt: "$items.shippedAt",
+                            deliveredAt: "$items.deliveredAt",
+                            placedAt: "$items.placedAt",
+                            product_order_status: "$items.product_order_status"
+                        }
+                    }
+                }
+            },
+            
+            // Sort by latest orders first
+            { $sort: { createdAt: -1 } }
+        ]);
+
+        const summary = await this.getSellerOrderSummary(orders);
+
+        return {
+            summary,
+            orders
+        };
+    },
     async cancelOrder(orderId, userId) {
         try {
             const order = await Order.findOneAndUpdate(

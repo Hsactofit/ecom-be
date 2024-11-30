@@ -8,6 +8,11 @@ const wishlistService = {
         try {
         const wishlist = await Wishlist.findOne({ userId })
             .lean();
+            console.log(wishlist);
+            if(!wishlist)
+            {
+                return [];
+            }
             const productsWithDetails = await Promise.all(
                 wishlist.items.map(async (item) => {
                     try {

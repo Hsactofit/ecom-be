@@ -15,6 +15,10 @@ router.get('/:orderId', orderController.getOrderById);
 // Get all orders for a user
 router.get('/user/:userId', orderController.getUserOrders);
 
+
+// Get all orders for a seller
+router.get('/seller/:sellerId', orderController.getSellerOrders);
+
 // Cancel an order
 router.patch('/cancel', orderController.cancelOrder);
 

@@ -1,5 +1,40 @@
 const mongoose = require('mongoose');
 
+const productOrderSchema = new mongoose.Schema(
+    {
+        productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+            required: true
+        },
+        quantity: {
+            type: Number,
+            required: true,
+            min: [1, 'Quantity cannot be less than 1']
+        },
+        price: {
+            type: Number,
+            required: true
+        },
+        shippedAt: {
+            type: Date,
+            default: Date.now
+        },
+        deliveredAt: {
+            type: Date
+        },
+        placedAt: {
+            type: Date,
+            default: Date.now
+        },
+        product_order_status: {
+            type: String,
+            enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'],
+            default: 'Pending'
+        }
+    }
+);
+
 const orderSchema = new mongoose.Schema(
     {
         userId: {
@@ -8,30 +43,15 @@ const orderSchema = new mongoose.Schema(
             required: true
         },
         items: [
-            {
-                productId: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'Product',
-                    required: true
-                },
-                quantity: {
-                    type: Number,
-                    required: true,
-                    min: [1, 'Quantity cannot be less than 1']
-                },
-                price: {
-                    type: Number,
-                    required: true
-                }
-            }
+            {type:productOrderSchema}
         ],
         totalAmount: {
             type: Number,
             required: true
         },
-        status: {
+        order_status: {
             type: String,
-            enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'],
+            enum: ['Pending', 'Completed'],
             default: 'Pending'
         },
         shippingAddress: {
@@ -42,17 +62,6 @@ const orderSchema = new mongoose.Schema(
             state: { type: String, required: true },
             zipCode: { type: String, required: true },
             country: { type: String, required: true }
-        },
-        placedAt: {
-            type: Date,
-            default: Date.now
-        },
-        shippedAt: {
-            type: Date,
-            default: Date.now
-        },
-        deliveredAt: {
-            type: Date
         }
     },
     { timestamps: true }
