@@ -13,7 +13,7 @@ const cartService = {
                 .lean();
 
             if (!cart) {
-                return null;
+                return [];
             }
 
             const productsWithDetails = await Promise.all(

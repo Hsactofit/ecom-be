@@ -53,7 +53,7 @@ class AuthController {
             const token = AuthService.generateToken(user._id);
             user.lastLogin = Date.now();
             await user.save();
-
+            
             res.json({
                 success: true,
                 token,

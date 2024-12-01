@@ -5,7 +5,7 @@ const cartController = {
     async getCart(req, res) {
         try {
             const cart = await cartService.getUserCart(req.params.userId);
-            if (!cart || cart.items.length === 0) {
+            if (!cart || cart.items?.length === 0) {
                 return res.status(200).json({
                     success: true,
                     message: 'Cart is empty',
