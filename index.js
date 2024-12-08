@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const routes = require("./routes/index");
 const config = require("./config/appConfig");
+const cookieParser = require("cookie-parser");
 const { Server } = require("socket.io");
 const http = require("http");
 
@@ -22,6 +23,9 @@ const io = new Server(server, {
 });
 
 // Middleware
+app.use(express.json());
+app.use(cookieParser());
+
 app.use(
   cors({
     origin: [
@@ -33,7 +37,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
 
 // Mount all routes
@@ -100,6 +104,6 @@ app.use((err, req, res, next) => {
 
 // Start the server
 const PORT = config.server.port;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
 });
