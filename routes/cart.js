@@ -1,29 +1,42 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const cartController = require('../controllers/CartController');
+const cartController = require("../controllers/CartController");
+const { authenticateToken, checkRole } = require("../middleware/auth");
 
-// Get cart items for a user
-router.get('/:userId', cartController.getCart);
+// ======================= Public Routes =======================
 
-// Get specific cart items
-router.get('/items/:userId', cartController.getCartItems);
+// Check if a product variant is in the cart (public route)
+router.get(
+  "/:userId/check/:productId/:variantIndex",
+  cartController.isProductInCart
+);
 
-// Add item to cart
-router.post('/', cartController.addToCart);
+// ======================= Private Routes =======================
 
-// Update cart item
-router.put('/update', cartController.updateCartItem);
+// Get cart items for a user (private route, user must be authenticated)
+router.get("/:userId", authenticateToken, cartController.getCart);
 
-// Remove item from cart (now includes variantIndex)
-router.delete('/', cartController.removeFromCart);
+// Get specific cart items (private route, user must be authenticated)
+router.get("/items/:userId", authenticateToken, cartController.getCartItems);
 
-// Check if product variant in cart
-router.get('/:userId/check/:productId/:variantIndex', cartController.isProductInCart);
+// Add item to cart (private route, user must be authenticated)
+router.post("/", authenticateToken, cartController.addToCart);
 
-// Clear cart
-router.delete('/clear/:userId', cartController.clearCart);
+// Update cart item (private route, user must be authenticated)
+router.put("/update", authenticateToken, cartController.updateCartItem);
 
-// Mark cart as completed
-router.put('/:userId/complete', cartController.markCartCompleted);
+// Remove item from cart (private route, user must be authenticated)
+router.delete("/", authenticateToken, cartController.removeFromCart);
+
+// Clear cart (private route, user must be authenticated)
+router.delete("/clear/:userId", authenticateToken, cartController.clearCart);
+
+// Mark cart as completed (private route, user must be authenticated and have the correct role)
+router.put(
+  "/:userId/complete",
+  authenticateToken,
+  checkRole("customer"), // Only allow customers to mark cart as completed
+  cartController.markCartCompleted
+);
 
 module.exports = router;

@@ -1,26 +1,53 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const UserController = require('../controllers/UserController');
-const { authenticateToken, isVerified, checkRole } = require('../middleware/auth');
+const UserController = require("../controllers/UserController");
+const { authenticateToken, checkRole } = require("../middleware/auth");
 
+// ======================= Public Routes =======================
 
-router.put('/:userId/role', UserController.updateUserRole);
-// router.put('/:userId/role', authenticateToken, isVerified, UserController.updateUserRole);
+// Get user by ID (public route)
+router.get("/", UserController.getUserById);
 
-router.get('/', UserController.getUserById);
+// ======================= Private Routes =======================
 
-// router.get('/', authenticateToken, isVerified, checkRole('admin'), UserController.getUsersByRole);
+// Update user role (accessible by admin only)
+router.put(
+  "/:userId/role",
+  authenticateToken,
+  checkRole("admin"),
+  UserController.updateUserRole
+);
 
-router.put('/:userId/business-profile', authenticateToken, isVerified, UserController.updateBusinessProfile);
+// Update business profile (accessible by authenticated users)
+router.put(
+  "/:userId/business-profile",
+  authenticateToken,
+  checkRole("seller"), // Assuming only sellers can update their business profile
+  UserController.updateBusinessProfile
+);
 
+// Accept user (accessible by admin only)
+router.patch(
+  "/:userId/accept",
+  authenticateToken,
+  checkRole("admin"),
+  UserController.acceptUser
+);
 
-// Accept user
-router.patch('/:userId/accept', UserController.acceptUser);
+// Reject user (accessible by admin only)
+router.patch(
+  "/:userId/reject",
+  authenticateToken,
+  checkRole("admin"),
+  UserController.rejectUser
+);
 
-// Reject user
-router.patch('/:userId/reject', UserController.rejectUser);
-
-// Get all sellers
-router.get('/sellers', UserController.getAllSellers);
+// Get all sellers (accessible by admin only)
+router.get(
+  "/sellers",
+  authenticateToken,
+  checkRole("admin"),
+  UserController.getAllSellers
+);
 
 module.exports = router;

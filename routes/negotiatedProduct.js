@@ -1,13 +1,36 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const negotiatedProductController = require('../controllers/NegotiatedProductController');
+const negotiatedProductController = require("../controllers/NegotiatedProductController");
+const { authenticateToken, checkRole } = require("../middleware/auth");
 
-router.post('/', negotiatedProductController.createNegotiatedProduct);
+// Create a negotiated product (private route, user must be authenticated)
+router.post(
+  "/",
+  authenticateToken,
+  negotiatedProductController.createNegotiatedProduct
+);
 
-router.get('/seller/:sellerId', negotiatedProductController.getNegotiatedProductsBySeller);
+// Get negotiated products by seller (private route, user must be authenticated)
+router.get(
+  "/seller/:sellerId",
+  authenticateToken,
+  checkRole("seller"), // Only sellers should be able to view their negotiated products
+  negotiatedProductController.getNegotiatedProductsBySeller
+);
 
-router.get('/:id', negotiatedProductController.getNegotiatedProduct);
+// Get a specific negotiated product (private route, user must be authenticated)
+router.get(
+  "/:id",
+  authenticateToken,
+  negotiatedProductController.getNegotiatedProduct
+);
 
-router.delete('/:id', negotiatedProductController.deleteNegotiatedProduct);
+// Delete a negotiated product (private route, user must be authenticated and have the correct role)
+router.delete(
+  "/:id",
+  authenticateToken,
+  checkRole("seller"), // Only sellers should be able to delete their own negotiated products
+  negotiatedProductController.deleteNegotiatedProduct
+);
 
 module.exports = router;
