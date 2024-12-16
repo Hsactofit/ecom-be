@@ -39,6 +39,7 @@
     "twilio": "^5.3.6"
   },
   "devDependencies": {
-    "nodemon": "^2.0.13"
+    "nodemon": "^2.0.13",
+    "serverless-offline": "^14.4.0"
   }
 }
