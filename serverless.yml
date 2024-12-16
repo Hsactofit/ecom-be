@@ -1,0 +1,62 @@
+service: ecom-be
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${env:AWS_REGION}
+  environment:
+    MONGODB_URI: ${env:MONGODB_URI}
+    NODE_ENV: production
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+            - dynamodb:Scan
+            - execute-api:ManageConnections
+          Resource:
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/WebSocketConnections"
+            - "arn:aws:execute-api:${self:provider.region}:*:*/@connections/*"
+
+functions:
+  api:
+    handler: index.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+
+  websocketConnect:
+    handler: services/websocket.handleConnect
+    events:
+      - websocket:
+          route: $connect
+
+  websocketDisconnect:
+    handler: services/websocket.handleDisconnect
+    events:
+      - websocket:
+          route: $disconnect
+
+  websocketMessage:
+    handler: services/websocket.handleMessage
+    events:
+      - websocket:
+          route: $default
+
+resources:
+  Resources:
+    WebSocketConnections:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: WebSocketConnections
+        AttributeDefinitions:
+          - AttributeName: connectionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: connectionId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
