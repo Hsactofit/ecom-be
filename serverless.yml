@@ -5,6 +5,9 @@ provider:
   name: aws
   runtime: nodejs18.x
   region: ${env:AWS_REGION}
+  deploymentBucket:
+    name: ecom-be-deployments-${env:AWS_REGION}  # This will create a new bucket if it doesn't exist
+    maxPreviousDeploymentArtifacts: 5  # Keeps only last 5 deployments
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
     NODE_ENV: production
