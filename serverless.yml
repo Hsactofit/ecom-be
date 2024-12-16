@@ -8,32 +8,6 @@ provider:
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
     NODE_ENV: production
-  iam:
-    role:
-      statements:
-        - Effect: Allow
-          Action:
-            - dynamodb:PutItem
-            - dynamodb:DeleteItem
-            - dynamodb:Scan
-            - execute-api:ManageConnections
-            - cloudformation:*
-            - s3:*
-            - events:*
-            - lambda:*
-            - logs:*
-            - apigateway:*
-          Resource: "*"
-
-package:
-  patterns:
-    - '!node_modules/.prisma/**'
-    - '!node_modules/@prisma/**'
-    - '!tests/**'
-    - '!coverage/**'
-    - '!.git/**'
-    - '!.github/**'
-    - '!.vscode/**'
 
 functions:
   api:
@@ -42,39 +16,25 @@ functions:
       - http:
           path: /{proxy+}
           method: ANY
-          cors:
-            origin: '*'
-            headers:
-              - Content-Type
-              - Authorization
-              - X-Amz-Date
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-            allowCredentials: true
-    timeout: 30
-    memorySize: 512
+          cors: true
 
   websocketConnect:
     handler: services/websocket.handleConnect
     events:
       - websocket:
           route: $connect
-    timeout: 30
 
   websocketDisconnect:
     handler: services/websocket.handleDisconnect
     events:
       - websocket:
           route: $disconnect
-    timeout: 30
 
   websocketMessage:
     handler: services/websocket.handleMessage
     events:
       - websocket:
           route: $default
-    timeout: 30
 
 resources:
   Resources:
@@ -89,31 +49,6 @@ resources:
           - AttributeName: connectionId
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-
-    GatewayResponseDefault4XX:
-      Type: 'AWS::ApiGateway::GatewayResponse'
-      Properties:
-        ResponseParameters:
-          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
-          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
-        ResponseType: DEFAULT_4XX
-        RestApiId:
-          Ref: 'ApiGatewayRestApi'
-
-    GatewayResponseDefault5XX:
-      Type: 'AWS::ApiGateway::GatewayResponse'
-      Properties:
-        ResponseParameters:
-          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
-          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
-        ResponseType: DEFAULT_5XX
-        RestApiId:
-          Ref: 'ApiGatewayRestApi'
-
-custom:
-  stages:
-    - dev
-    - prod
 
 plugins:
   - serverless-offline
