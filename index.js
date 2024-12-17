@@ -16,6 +16,9 @@ const io = new Server(server, {
       "http://localhost:5173",
       "http://localhost:3000",
       "http://localhost:5174",
+      "https://shop.technologyheaven.in"
+      "https://seller.technologyheaven.in",
+      "https://register.technologyheaven.in"
     ],
     methods: ["GET", "POST"],
     credentials: true,
@@ -33,6 +36,9 @@ app.use(
       "http://localhost:5173",
       "http://localhost:3000",
       "http://localhost:5174",
+      "https://shop.technologyheaven.in"
+      "https://seller.technologyheaven.in",
+      "https://register.technologyheaven.in"
     ],
     credentials: true,
   })
