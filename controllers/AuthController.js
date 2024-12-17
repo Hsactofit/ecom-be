@@ -227,19 +227,46 @@ class AuthController {
       });
     }
   }
-
-  async relogin(req, res) {
+async relogin(req, res) {
     try {
-      // Extract required fields from req.user
-      const { _id, name, email, role } = req.user;
+        // Retrieve existing token from cookies
+        const existingToken = req.cookies['technology-heaven-token'];
 
-      res.json({ success: true, user: { _id, name, email, role } });
+        if (!existingToken) {
+            return res.status(401).json({ message: "No existing token found" });
+        }
+
+        // Verify the existing token (implement your token verification logic)
+        const decodedToken = verifyToken(existingToken);
+
+        if (!decodedToken) {
+            return res.status(401).json({ message: "Invalid token" });
+        }
+
+        // Generate a new token (if needed)
+        const newToken = generateToken(decodedToken.user);
+
+        // Set new cookie with the token
+        res.cookie('technology-heaven-token', newToken, {
+            domain: '.technologyheaven.in',
+            path: '/',
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        // Send response
+        res.status(200).json({ 
+            message: "Relogin successful", 
+            user: decodedToken.user 
+        });
+
     } catch (error) {
-      console.error("Error during relogin:", error);
-      res.status(500).json({ message: "Internal server error" });
+        console.error("Error during relogin:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
-  }
-
+}
   async getLoggedInUserDetails(req, res) {
     try {
       // Use req.user populated by authenticateToken
