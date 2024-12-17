@@ -20,9 +20,10 @@ class AuthController {
 
       res.cookie("technology-heaven-token", token, {
         httpOnly: true,
-        secure: true, // Change to true for HTTPS
-        sameSite: "None", // Change from Lax to None for cross-site sharing
-        domain: '.technologyheaven.in', // Add domain attribute
+        secure: process.env.NODE_ENV === 'production', // Dynamic secure flag
+        sameSite: 'None', // Explicitly None
+        domain: '.technologyheaven.in', // Dot-prefixed domain
+        path: '/', // Ensure path is root
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
