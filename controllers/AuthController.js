@@ -1,5 +1,6 @@
 const AuthService = require("../services/AuthService");
-const User = require("../models/User");
+const User = require("../models/User");// middleware/auth.js
+const jwt = require("jsonwebtoken");
 
 class AuthController {
   async signup(req, res) {
@@ -230,10 +231,22 @@ class AuthController {
 
   async relogin(req, res) {
     try {
-      // Extract required fields from req.user
-      const { _id, name, email, role } = req.user;
+      console.log(req);
 
-      res.json({ success: true, user: { _id, name, email, role } });
+      // Extract required fields from req.user
+      const { token } = req.body;
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.userId).select("-password");
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      res.json({ success: true, user: user});
     } catch (error) {
       console.error("Error during relogin:", error);
       res.status(500).json({ message: "Internal server error" });

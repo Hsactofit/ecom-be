@@ -22,7 +22,7 @@ router.post(
   AuthController.resendVerification
 );
 
-router.post("/relogin", authenticateToken, AuthController.relogin);
+router.post("/relogin", AuthController.relogin);
 
 router.get(
   "/get-logged-in-user-details",
