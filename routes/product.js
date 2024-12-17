@@ -65,7 +65,7 @@ router.delete(
 );
 
 // Accept product (only for sellers)
-router.patch(
+router.patch( 
   "/:productId/accept",
   authenticateToken,
   checkRole("seller"),
