@@ -40,6 +40,7 @@ class AuthController {
     }
   }
 
+
   async login(req, res) {
     try {
       const { email, password } = req.body;
@@ -66,12 +67,15 @@ class AuthController {
       user.lastLogin = Date.now();
       await user.save();
 
-      res.cookie("technology-heaven-token", token, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "Lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
+      res.setHeader('Set-Cookie', [
+        `technology-heaven-token=${token}; ` +
+        `Domain=.technologyheaven.in; ` +
+        `Path=/; ` +
+        `HttpOnly; ` +
+        `Secure; ` +
+        `SameSite=None`
+      ]);
+      
 
       res.json({
         success: true,
