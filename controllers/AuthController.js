@@ -67,15 +67,15 @@ class AuthController {
       user.lastLogin = Date.now();
       await user.save();
 
-      res.setHeader('Set-Cookie', [
-        `technology-heaven-token=${token}; ` +
-        `Domain=.technologyheaven.in; ` +
-        `Path=/; ` +
-        `HttpOnly; ` +
-        `Secure; ` +
-        `SameSite=None`
-      ]);
-      
+      res.cookie('technology-heaven-token', token, {
+        domain: 'technologyheaven.in', // Critical for multiple subdomains
+        path: '/',
+        httpOnly: true,
+        secure: true,  // Must be true for production/HTTPS
+        sameSite: 'None', // Allows cross-site cookie sharing
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+
 
       res.json({
         success: true,
