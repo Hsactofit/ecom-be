@@ -1,23 +1,24 @@
 const orderService = require('../services/OrderService');
 const { validateObjectId } = require('../utils/validation');
+const { logError } = require("../utils/logError");
 
 const orderController = {
     /**
      * Create order from cart
      */
     async createOrderFromCart(req, res) {
-        const { userId, shippingAddress, paymentMethod } = req.body;
+        const { userId, shippingAddress } = req.body;
 
-        if (!userId || !shippingAddress || !paymentMethod) {
+        if (!userId || !shippingAddress ) {
             logError('createOrderFromCart', 'Missing required fields', { userId });
             return res.status(400).json({
                 success: false,
-                message: 'User ID, shippingAddress, and paymentMethod are required'
+                message: 'User ID, shippingAddress are required'
             });
         }
 
         try {
-            const order = await orderService.createOrderFromCart(userId, shippingAddress, paymentMethod);
+            const order = await orderService.createOrderFromCart(userId, shippingAddress);
             res.status(201).json({
                 success: true,
                 data: order,

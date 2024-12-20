@@ -20,7 +20,7 @@ router.get("/:userId", authenticateToken, cartController.getCart);
 router.get("/items/:userId", authenticateToken, cartController.getCartItems);
 
 // Add item to cart (private route, user must be authenticated)
-router.post("/", authenticateToken, cartController.addToCart);
+router.post("/",  cartController.addToCart);
 
 // Update cart item (private route, user must be authenticated)
 router.put("/update", authenticateToken, cartController.updateCartItem);

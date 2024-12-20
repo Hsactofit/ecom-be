@@ -1,7 +1,7 @@
 const ProductService = require('../services/product/ProductService');
 const ResellProductService = require('../services/product/ResellProductService');
 const ProductSearchService = require('../services/product/ProductSearchService');
-
+const mongoose = require('mongoose');
 class ProductController {
     async createProduct(req, res) {
         try {
@@ -89,6 +89,39 @@ class ProductController {
         }
     }
 
+    async getSellerProductsStockLevels(req, res) {
+        try {
+            const sellerId = req.params.sellerId;
+            
+            const stockLevels = await ProductService.getSellerProductsStockLevels(sellerId);
+            
+            res.json(stockLevels);
+        } catch (error) {
+            console.error('Error fetching stock levels:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
+    async updateProductStock(req, res) {
+        try {
+            const sellerId = req.body.sellerId; // Assuming the authenticated user is the seller
+            const productId = req.params.productId;
+            const variantId = req.params.idx;
+            const stock = req.body.stock;
+            
+            const updatedProduct = await ProductService.updateProductStock(sellerId, productId, variantId, stock);
+            
+            if (updatedProduct) {
+                res.json(updatedProduct);
+            } else {
+                res.status(404).json({ error: 'Product not found or unauthorized' });
+            }
+        } catch (error) {
+            console.error('Error updating product stock:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
     async rejectProduct(req, res) {
         try {
             const { productId } = req.params;
@@ -115,6 +148,17 @@ class ProductController {
             return res.status(200).json({ message: 'Products retrieved successfully', products });
         } catch (error) {
             return res.status(500).json({ message: 'Error retrieving products', error: error.message });
+        }
+    }
+
+    async getActiveSellerProducts(req, res) {
+        try {
+            const sellerId = mongoose.Types.ObjectId(req.params.sellerId);
+            const products = await ProductService.getActiveSellerProducts(sellerId);
+            res.json(products);
+        } catch (error) {
+            console.error('Error getting active seller products:', error);
+            res.status(500).json({ error: 'Internal server error' });
         }
     }
 }

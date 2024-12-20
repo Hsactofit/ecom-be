@@ -63,13 +63,13 @@ const cartService = {
                 items: productsWithDetails,
                 cartTotal
             };
-        } catch (error) {
-            logError('getUserCart', error, { userId });
+            } catch (error) {
+                logError('getUserCart', error, { userId });
             throw error;
         }
     },
 
-    async addItem(userId, productId, variantIndex, quantity, productPrice = 0) {
+    async addItem(userId, productId, variantIndex, quantity, productPrice) {
         try {
             if (!userId || !productId || typeof variantIndex !== 'number' || typeof quantity !== 'number') {
                 throw new Error('Invalid input for adding item');

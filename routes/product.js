@@ -9,6 +9,12 @@ const { authenticateToken, checkRole } = require("../middleware/auth");
 
 // ======================= Public Routes =======================
 
+router.put('/seller/:productId/variants/:idx/stock', productController.updateProductStock);
+
+router.get('/seller/:sellerId/products/stock', productController.getSellerProductsStockLevels);
+
+router.get('/sellers/:sellerId/products', productController.getActiveSellerProducts);
+
 // Product search (accessible to all)
 router.get("/search", productSearchController.searchProducts);
 

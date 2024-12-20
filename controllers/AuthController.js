@@ -69,7 +69,7 @@ class AuthController {
       await user.save();
 
       res.cookie('technology-heaven-token', token, {
-        domain: 'technologyheaven.in', // Critical for multiple subdomains
+        domain: '.technologyheaven.in', // Critical for multiple subdomains
         path: '/',
         httpOnly: true,
         secure: true,  // Must be true for production/HTTPS
@@ -231,11 +231,10 @@ class AuthController {
 
   async relogin(req, res) {
     try {
-      console.log(req);
 
       // Extract required fields from req.user
       const { token } = req.body;
-
+      console.log("mytoken", token);
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(decoded.userId).select("-password");
 

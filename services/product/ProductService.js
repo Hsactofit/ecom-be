@@ -161,6 +161,76 @@ class ProductService {
             throw new Error(error.message);
         }
     };
+    async getActiveSellerProducts(sellerId) {
+        try {
+            const products = await Product.find({
+                seller: sellerId,
+                status: 'active'
+            });
+            return products;
+        } catch (error) {
+            throw new Error('Error getting active seller products');
+        }
+    };
+
+    async getSellerIdFromProductId(productId) {
+        try {
+
+        // Find the product by its _id and select only the seller field
+        const product = await Product.findById(productId).select('seller');
+
+        if (!product) {
+            throw new Error('Product not found');
+        }
+
+        // Return the sellerId
+        return product.seller;
+        } catch (error) {
+            throw new Error('Error getting active seller products');
+        }
+    };
+
+    async getSellerProductsStockLevels(sellerId) {
+        try {
+            const products = await Product.find({ seller: sellerId, status: 'active' });
+            
+            const stockLevels = products.map((product) => ({
+                productId: product._id,
+                title: product.title,
+                variants: product.variants.map((variant) => ({
+                    variantId: variant._id,
+                    stock: variant.stock,
+                })),
+            }));
+            
+            return stockLevels;
+        } catch (error) {
+            throw new Error('Error fetching stock levels');
+        }
+    };
+
+    async updateProductStock(sellerId, productId, variantIndex, stock) {
+        try {
+            const product = await Product.findOne({ _id: productId, seller: sellerId });
+            
+            if (!product) {
+                return null; // Product not found or unauthorized
+            }
+            
+            if (variantIndex < 0 || variantIndex >= product.variants.length) {
+                return null; // Invalid variant index
+            }
+            
+            product.variants[variantIndex].stock = stock;
+            
+            const updatedProduct = await product.save();
+            
+            return updatedProduct;
+        } catch (error) {
+            console.log(error);
+            throw new Error('Error updating product stock');
+        }
+    };
 
 }
 
