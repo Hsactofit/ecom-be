@@ -1,5 +1,5 @@
 const AuthService = require("../services/AuthService");
-const User = require("../models/User");// middleware/auth.js
+const User = require("../models/User"); // middleware/auth.js
 const jwt = require("jsonwebtoken");
 
 class AuthController {
@@ -47,7 +47,6 @@ class AuthController {
     }
   }
 
-
   async login(req, res) {
     try {
       const { email, password } = req.body;
@@ -78,11 +77,10 @@ class AuthController {
         domain: '.technologyheaven.in', // Critical for multiple subdomains
         path: '/',
         httpOnly: true,
-        secure: true,  // Must be true for production/HTTPS
-        sameSite: 'None', // Allows cross-site cookie sharing
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        secure: true, // Must be true for production/HTTPS
+        sameSite: "None", // Allows cross-site cookie sharing
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
-
 
       res.json({
         success: true,
@@ -238,7 +236,7 @@ class AuthController {
 
   async relogin(req, res) {
     try {
-
+      console.log(req);
       // Extract required fields from req.user
       const { token } = req.body;
       console.log("mytoken", token);
@@ -252,7 +250,7 @@ class AuthController {
         });
       }
 
-      res.json({ success: true, user: user});
+      res.json({ success: true, user: user });
     } catch (error) {
       console.error("Error during relogin:", error);
       res.status(500).json({ message: "Internal server error" });

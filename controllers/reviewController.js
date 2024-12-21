@@ -4,32 +4,20 @@ class ReviewController {
   // Add a review
   async addReview(req, res) {
     try {
-      const {
-        product,
-        rating,
-        title,
-        comment,
-        purchaseVerified,
-        variant,
-        images,
-      } = req.body;
-      const userId = req.user.id; // Assuming user ID is set by auth middleware
+      const { productId, rating, title, comment, sellerId } = req.body;
+      const userId = req.user.id;
 
-      // Assume 'seller' is passed in the body or derived from the product details
-      const seller = req.body.seller; // Or fetch this from the product details if necessary
-
-      // Create the review
+      // Pass only IDs to the service
       const review = await ReviewService.createReview({
-        product,
+        product: productId,
         user: userId,
-        seller,
+        seller: sellerId,
         rating,
         title,
         comment,
-        purchaseVerified,
-        variant,
-        images,
       });
+
+      console.log(review);
 
       res.status(201).json({
         success: true,
@@ -37,11 +25,7 @@ class ReviewController {
         message: "Review added successfully",
       });
     } catch (error) {
-      console.log(error);
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 
@@ -49,7 +33,7 @@ class ReviewController {
   async updateReview(req, res) {
     try {
       const { reviewId } = req.params;
-      const userId = req.user.id; // Assuming user ID is set by auth middleware
+      const userId = req.user.id;
       const updatedData = req.body;
 
       const review = await ReviewService.updateReview(
@@ -61,8 +45,7 @@ class ReviewController {
       if (!review) {
         return res.status(404).json({
           success: false,
-          message:
-            "Review not found or user not authorized to update this review",
+          message: "Review not found or unauthorized",
         });
       }
 
@@ -72,10 +55,7 @@ class ReviewController {
         message: "Review updated successfully",
       });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 
@@ -83,27 +63,156 @@ class ReviewController {
   async deleteReview(req, res) {
     try {
       const { reviewId } = req.params;
-      const userId = req.user.id; // Assuming user ID is set by auth middleware
+      const userId = req.user.id;
 
       const review = await ReviewService.deleteReview(reviewId, userId);
 
       if (!review) {
         return res.status(404).json({
           success: false,
-          message:
-            "Review not found or user not authorized to delete this review",
+          message: "Review not found or unauthorized",
         });
       }
 
-      res.json({
+      res.json({ success: true, message: "Review deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // Like a review
+  async likeReview(req, res) {
+    try {
+      const { reviewId } = req.params;
+      const userId = req.user.id;
+
+      const updatedReview = await ReviewService.likeReview(reviewId, userId);
+
+      res.status(200).json({
         success: true,
-        message: "Review deleted successfully",
+        review: updatedReview,
+        message: "Review liked successfully",
       });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // Dislike a review
+  async dislikeReview(req, res) {
+    try {
+      const { reviewId } = req.params;
+      const userId = req.user.id;
+
+      const updatedReview = await ReviewService.dislikeReview(reviewId, userId);
+
+      res.status(200).json({
+        success: true,
+        review: updatedReview,
+        message: "Review disliked successfully",
       });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // Add a reply to a review
+  async addReply(req, res) {
+    try {
+      const { reviewId } = req.params;
+      const { replyText } = req.body;
+      const userId = req.user.id;
+
+      if (!replyText) {
+        return res.status(400).json({ message: "Reply text is required" });
+      }
+
+      const reply = await ReviewService.addReplyToReview(
+        reviewId,
+        userId,
+        replyText
+      );
+
+      res.status(201).json({
+        success: true,
+        reply,
+        message: "Reply added successfully",
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // Delete a reply
+  async deleteReply(req, res) {
+    try {
+      const { reviewId, replyId } = req.params;
+      const userId = req.user.id;
+
+      const updatedReview = await ReviewService.deleteReply(
+        reviewId,
+        replyId,
+        userId
+      );
+
+      if (!updatedReview) {
+        return res.status(404).json({
+          success: false,
+          message: "Reply not found or unauthorized",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Reply deleted successfully",
+        review: updatedReview,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // Like a reply
+  async likeReply(req, res) {
+    try {
+      const { reviewId, replyId } = req.params;
+      const userId = req.user.id;
+
+      const updatedReply = await ReviewService.likeReply(
+        reviewId,
+        replyId,
+        userId
+      );
+
+      res.status(200).json({
+        success: true,
+        reply: updatedReply,
+        message: "Reply liked successfully",
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // Dislike a reply
+  async dislikeReply(req, res) {
+    try {
+      const { reviewId, replyId } = req.params;
+      const userId = req.user.id;
+
+      const updatedReply = await ReviewService.dislikeReply(
+        reviewId,
+        replyId,
+        userId
+      );
+
+      res.status(200).json({
+        success: true,
+        reply: updatedReply,
+        message: "Reply disliked successfully",
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 
@@ -175,6 +284,8 @@ class ReviewController {
       const { productId } = req.params;
       const reviews = await ReviewService.getReviewsByProductId(productId);
 
+      console.log("Request Received....");
+
       if (!reviews || reviews.length === 0) {
         return res.status(404).json({
           success: false,
@@ -219,67 +330,37 @@ class ReviewController {
   }
 
   // Add a reply to a review
-  async addReply(req, res) {
-    try {
-      const { reviewId } = req.params;
-      const { replyText } = req.body;
-      const userId = req.user.id; // Assuming user ID is set by auth middleware
+  // async addReply(req, res) {
+  //   try {
+  //     const { reviewId } = req.params;
+  //     const { replyText } = req.body;
+  //     const userId = req.user.id; // Assuming user ID is set by auth middleware
 
-      // Validate the input
-      if (!replyText) {
-        return res.status(400).json({ message: "Reply text is required" });
-      }
+  //     // Validate the input
+  //     if (!replyText) {
+  //       return res.status(400).json({ message: "Reply text is required" });
+  //     }
 
-      // Add the reply to the review
-      const reply = await ReviewService.addReplyToReview(
-        reviewId,
-        userId,
-        replyText
-      );
+  //     // Add the reply to the review
+  //     const reply = await ReviewService.addReplyToReview(
+  //       reviewId,
+  //       userId,
+  //       replyText
+  //     );
 
-      res.status(201).json({
-        success: true,
-        reply,
-        message: "Reply added successfully",
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Error adding reply",
-        error: error.message,
-      });
-    }
-  }
-
-  // Like a reply
-  async likeReply(req, res) {
-    try {
-      const { reviewId, replyId } = req.params;
-      const userId = req.user.id; // Assuming user ID is set by auth middleware
-
-      // Like the reply
-      const updatedReply = await ReviewService.likeReply(replyId, userId);
-
-      if (!updatedReply) {
-        return res.status(404).json({
-          success: false,
-          message: "Reply not found",
-        });
-      }
-
-      res.status(200).json({
-        success: true,
-        updatedReply,
-        message: "Reply liked successfully",
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Error liking reply",
-        error: error.message,
-      });
-    }
-  }
+  //     res.status(201).json({
+  //       success: true,
+  //       reply,
+  //       message: "Reply added successfully",
+  //     });
+  //   } catch (error) {
+  //     res.status(500).json({
+  //       success: false,
+  //       message: "Error adding reply",
+  //       error: error.message,
+  //     });
+  //   }
+  // }
 
   // Approve a reply (admin only)
   async approveReply(req, res) {
