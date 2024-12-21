@@ -1,5 +1,5 @@
 const AuthService = require("../services/AuthService");
-const User = require("../models/User");// middleware/auth.js
+const User = require("../models/User"); // middleware/auth.js
 const jwt = require("jsonwebtoken");
 
 class AuthController {
@@ -21,10 +21,10 @@ class AuthController {
 
       res.cookie("technology-heaven-token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // Dynamic secure flag
-        sameSite: 'None', // Explicitly None
-        domain: '.technologyheaven.in', // Dot-prefixed domain
-        path: '/', // Ensure path is root
+        secure: process.env.NODE_ENV === "production", // Dynamic secure flag
+        sameSite: "None", // Explicitly None
+        domain: ".technologyheaven.in", // Dot-prefixed domain
+        path: "/", // Ensure path is root
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
@@ -40,7 +40,6 @@ class AuthController {
       });
     }
   }
-
 
   async login(req, res) {
     try {
@@ -68,15 +67,14 @@ class AuthController {
       user.lastLogin = Date.now();
       await user.save();
 
-      res.cookie('technology-heaven-token', token, {
-        domain: 'technologyheaven.in', // Critical for multiple subdomains
-        path: '/',
+      res.cookie("technology-heaven-token", token, {
+        domain: "technologyheaven.in", // Critical for multiple subdomains
+        path: "/",
         httpOnly: true,
-        secure: true,  // Must be true for production/HTTPS
-        sameSite: 'None', // Allows cross-site cookie sharing
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        secure: true, // Must be true for production/HTTPS
+        sameSite: "None", // Allows cross-site cookie sharing
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
-
 
       res.json({
         success: true,
@@ -231,8 +229,6 @@ class AuthController {
 
   async relogin(req, res) {
     try {
-      console.log(req);
-
       // Extract required fields from req.user
       const { token } = req.body;
 
@@ -246,7 +242,7 @@ class AuthController {
         });
       }
 
-      res.json({ success: true, user: user});
+      res.json({ success: true, user: user });
     } catch (error) {
       console.error("Error during relogin:", error);
       res.status(500).json({ message: "Internal server error" });

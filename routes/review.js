@@ -38,17 +38,44 @@ router.put(
   reviewController.rejectReview
 );
 
-// ======================= New Routes for Replies =======================
+// ======================= Likes Routes for Replies =======================
 
-// Add a reply to a review (private route, user must be authenticated)
-router.post("/:reviewId/reply", authenticateToken, reviewController.addReply);
+// Like a review
+router.post("/:reviewId/like", authenticateToken, reviewController.likeReview);
 
-// Like a reply (private route, user must be authenticated)
+// Dislike a review
+router.post(
+  "/:reviewId/dislike",
+  authenticateToken,
+  reviewController.dislikeReview
+);
+
+// Like a reply
 router.post(
   "/:reviewId/reply/:replyId/like",
   authenticateToken,
   reviewController.likeReply
 );
+
+// Dislike a reply
+router.post(
+  "/:reviewId/reply/:replyId/dislike",
+  authenticateToken,
+  reviewController.dislikeReply
+);
+
+// ======================= New Routes for Replies =======================
+
+// Add a reply to a review (private route, user must be authenticated)
+router.post("/:reviewId/reply", authenticateToken, reviewController.addReply);
+
+router.delete(
+  "/:reviewId/reply/:replyId",
+  authenticateToken,
+  reviewController.deleteReply
+);
+
+// Like a reply (private route, user must be authenticated)
 
 // ======================= Admin Routes =======================
 

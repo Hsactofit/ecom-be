@@ -6,7 +6,33 @@ const auth = {
   // Verify JWT token
   authenticateToken: async (req, res, next) => {
     try {
-      console.log("my request",req);
+      // console.log("my request", req);
+
+      // Extract token from cookies
+      const token = req.cookies["technology-heaven-token"];
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          message: "Access token is required",
+        });
+      }
+
+      console.log("My token:", token);
+
+      // Verify the token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      // Fetch user details from the database
+      const user = await User.findById(decoded.userId).select("-password");
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      // Attach user to the request object
+      req.user = user;
       next();
     } catch (error) {
       console.error("JWT Verification Error:", error.message);

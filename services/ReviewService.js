@@ -5,50 +5,37 @@ const { logError } = require("../utils/logError");
 class ReviewService {
   // Add a new review
   async createReview(data) {
-    try {
-      if (!data.product || !data.user || !data.rating) {
-        throw new Error("Product ID, User ID, and Rating are required");
-      }
-
-      console.log("[ReviewService createReview Started]:", {
-        userId: data.user,
-        productId: data.product,
-        rating: data.rating,
-        timestamp: new Date().toISOString(),
-      });
-
-      // Check if the product exists
-      const product = await Product.findById(data.product);
-      if (!product) {
-        throw new Error("Product not found");
-      }
-
-      // Create a new review
-      const review = new Review({
-        product: data.product,
-        user: data.user,
-        seller: data.seller, // Add seller to the review
-        rating: data.rating,
-        title: data.title,
-        comment: data.comment,
-        purchaseVerified: data.purchaseVerified,
-        variant: data.variant,
-        images: data.images,
-      });
-      await review.save();
-
-      console.log("[ReviewService createReview Success]:", {
-        reviewId: review._id,
-        userId: data.user,
-        productId: data.product,
-        timestamp: new Date().toISOString(),
-      });
-
-      return review;
-    } catch (error) {
-      logError("createReview", error, data);
-      throw error;
+    console.log("Validation data:", data);
+    if (!data.product || !data.user || !data.rating) {
+      throw new Error("Product ID, user ID, and rating are required");
     }
+
+    // Validate if the product ID exists
+    const productExists = await Product.findById(data.product);
+    if (!productExists) {
+      throw new Error("Invalid product ID");
+    }
+
+    const review = new Review({
+      product: data.product, // Store product ID only
+      user: data.user, // User ID
+      seller: data.seller, // Seller ID
+      rating: data.rating,
+      title: data.title,
+      comment: data.comment,
+    });
+    // const review = await Review.create({
+    //   product: data.product, // Store product ID only
+    //   user: data.user, // User ID
+    //   seller: data.seller, // Seller ID
+    //   rating: data.rating,
+    //   title: data.title,
+    //   comment: data.comment,
+    // });
+    // console.log(review);
+
+    await review.save();
+    return review;
   }
 
   // Update an existing review
@@ -248,7 +235,8 @@ class ReviewService {
         throw new Error("Review not found");
       }
 
-      review.replies.push({ user: userId, text: replyText });
+      review.replies.push({ replyBy: userId, replyText });
+
       await review.save();
 
       console.log("[ReviewService addReplyToReview Success]:", {
@@ -264,42 +252,107 @@ class ReviewService {
     }
   }
 
-  // Like a reply
-  async likeReply(replyId, userId) {
+  // Delete a reply
+  async deleteReply(reviewId, replyId, userId) {
     try {
-      if (!replyId || !userId) {
-        throw new Error("Reply ID and User ID are required");
-      }
+      const review = await Review.findById(reviewId);
 
-      console.log("[ReviewService likeReply Started]:", {
-        replyId,
-        userId,
-        timestamp: new Date().toISOString(),
-      });
-
-      // Find the reply and add the like
-      const review = await Review.findOne({ "replies._id": replyId });
       if (!review) {
-        throw new Error("Reply not found");
+        throw new Error("Review not found");
       }
 
-      const reply = review.replies.id(replyId);
-      if (!reply.likes.includes(userId)) {
-        reply.likes.push(userId);
-        await review.save();
+      const replyIndex = review.replies.findIndex(
+        (reply) => reply._id.toString() === replyId
+      );
+
+      if (
+        replyIndex === -1 ||
+        review.replies[replyIndex].replyBy.toString() !== userId
+      ) {
+        throw new Error("Reply not found or unauthorized");
       }
 
-      console.log("[ReviewService likeReply Success]:", {
-        replyId,
-        userId,
-        timestamp: new Date().toISOString(),
-      });
+      review.replies.splice(replyIndex, 1); // Remove the reply
+      await review.save();
 
-      return reply; // Return updated reply
+      return review;
     } catch (error) {
-      logError("likeReply", error, { replyId, userId });
-      throw error;
+      throw new Error(error.message);
     }
+  }
+
+  // Like a review
+  async likeReview(reviewId, userId) {
+    const review = await Review.findById(reviewId);
+    if (!review) throw new Error("Review not found");
+
+    // Prevent multiple likes by the same user
+    if (review.likes.includes(userId)) {
+      review.likes.pull(userId);
+    } else {
+      review.likes.push(userId);
+      review.dislikes.pull(userId); // Remove dislike if present
+    }
+
+    await review.save();
+    return review;
+  }
+
+  // Dislike a review
+  async dislikeReview(reviewId, userId) {
+    const review = await Review.findById(reviewId);
+    if (!review) throw new Error("Review not found");
+
+    // Prevent multiple dislikes by the same user
+    if (review.dislikes.includes(userId)) {
+      review.dislikes.pull(userId);
+    } else {
+      review.dislikes.push(userId);
+      review.likes.pull(userId); // Remove like if present
+    }
+
+    await review.save();
+    return review;
+  }
+
+  // Like a reply
+  async likeReply(reviewId, replyId, userId) {
+    const review = await Review.findById(reviewId);
+    if (!review) throw new Error("Review not found");
+
+    const reply = review.replies.id(replyId);
+    if (!reply) throw new Error("Reply not found");
+
+    // Prevent multiple likes by the same user
+    if (reply.likes.includes(userId)) {
+      reply.likes.pull(userId);
+    } else {
+      reply.likes.push(userId);
+      reply.dislikes.pull(userId); // Remove dislike if present
+    }
+
+    await review.save();
+    return reply;
+  }
+
+  // Dislike a reply
+  async dislikeReply(reviewId, replyId, userId) {
+    const review = await Review.findById(reviewId);
+    if (!review) throw new Error("Review not found");
+
+    const reply = review.replies.id(replyId);
+    if (!reply) throw new Error("Reply not found");
+
+    // Prevent multiple dislikes by the same user
+    if (reply.dislikes.includes(userId)) {
+      reply.dislikes.pull(userId);
+    } else {
+      reply.dislikes.push(userId);
+      reply.likes.pull(userId); // Remove like if present
+    }
+
+    await review.save();
+    return reply;
   }
 
   // Approve or Reject a reply
