@@ -230,7 +230,6 @@ class AuthController {
   async relogin(req, res) {
     try {
       console.log(req);
-
       // Extract required fields from req.user
       const { token } = req.body;
       console.log("mytoken", token);
