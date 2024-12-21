@@ -28,10 +28,7 @@ router.get("/", productController.getAllProducts);
 
 // Protected routes for original products (only for sellers)
 router.post(
-  "/",
-  authenticateToken,
-  checkRole("seller"),
-  productController.createProduct
+  "/",productController.createProduct
 );
 
 router.put(

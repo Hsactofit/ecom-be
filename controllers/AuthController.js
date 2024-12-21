@@ -18,15 +18,21 @@ class AuthController {
 
       const user = await AuthService.createUser(req.body);
       const token = AuthService.generateToken(user._id);
+      const cookieData = {
+        token,
+        userID: user.id,
+        expiry: Date.now() + (24 * 60 * 60 * 1000) // JWT expiry time (7 days from now)
+      };
+      
 
-      res.cookie("technology-heaven-token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // Dynamic secure flag
-        sameSite: 'None', // Explicitly None
-        domain: '.technologyheaven.in', // Dot-prefixed domain
-        path: '/', // Ensure path is root
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
+        res.cookie("technology-heaven-token", cookieData, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production', // Dynamic secure flag
+          sameSite: 'None', // Explicitly None
+          domain: '.technologyheaven.in', // Dot-prefixed domain
+          path: '/', // Ensure path is root
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
 
       res.status(201).json({
         success: true,
@@ -67,7 +73,7 @@ class AuthController {
       const token = AuthService.generateToken(user._id);
       user.lastLogin = Date.now();
       await user.save();
-
+      
       res.cookie('technology-heaven-token', token, {
         domain: '.technologyheaven.in', // Critical for multiple subdomains
         path: '/',
@@ -81,6 +87,7 @@ class AuthController {
       res.json({
         success: true,
         token,
+        tokenExpiry: Date.now() + 24 * 60 * 60 * 1000,
         user: {
           id: user._id,
           name: user.name,

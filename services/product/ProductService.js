@@ -5,28 +5,29 @@ class ProductService {
 
     async createProduct(productData) {
         try {
-            if (!productData || !productData.title || !productData.seller || !productData.category) {
+            console.log(productData);
+            if (!productData || !productData.product.title || !productData.seller || !productData.product.category) {
                 throw new Error('Title, seller, and category are required');
             }
-
             console.log('[ProductService createProduct Started]:', {
-                title: productData.title,
+                title: productData.product.title,
                 seller: productData.seller,
-                category: productData.category,
+                category: productData.product.category,
                 timestamp: new Date().toISOString()
             });
 
             // Check if product already exists for this seller
             const existingProduct = await Product.findOne({
                 seller: productData.seller,
-                title: productData.title
+                title: productData.product.title
             });
 
             if (existingProduct) {
                 throw new Error('Product with this title already exists for this seller');
             }
 
-            const product = new Product(productData);
+            const product = new Product(productData.product);
+            product.seller = productData.seller;
             await product.save();
 
             console.log('[ProductService createProduct Success]:', {

@@ -15,6 +15,7 @@ const orderService = {
         try {
             // Fetch the active cart for the user
             const cart = await Cart.findOne({ userId, status: 'active' });
+            console.log("mycart",cart);
             if (!cart || cart.items.length === 0) {
                 logError('createOrderFromCart', 'Cart is empty', { userId });
                 return null;
@@ -48,7 +49,7 @@ const orderService = {
                     country: shippingAddress.country
                 }
             });
-
+            console.log("neworder", newOrder);
             // Save the order
             const savedOrder = await newOrder.save();
 

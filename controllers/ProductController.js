@@ -7,8 +7,7 @@ class ProductController {
         try {
             const productData = {
                 ...req.body,
-                seller: req.user.id
-            };
+            };  
 
             const product = await ProductService.createProduct(productData);
 

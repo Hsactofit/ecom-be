@@ -23,6 +23,8 @@ router.get(
   sellerOrderController.getSellerOrders
 );
 
+router.get('/sellers/sales-data', sellerOrderController.getSellerSalesData);
+
 // Get order by ID (private route, user must be authenticated)
 router.get("/:orderId", authenticateToken, orderController.getOrderById);
 

@@ -21,7 +21,7 @@ class SellerOrderController {
     static async getSellerOrders(req, res) {
         try {
             const filters = {
-                sellerId: req.query.sellerId,
+                sellerId: req.query.sellerId
             };
 
             const pagination = {
@@ -79,6 +79,19 @@ class SellerOrderController {
                 success: false,
                 error: error.message
             });
+        }
+    }
+    static async getSellerSalesData(req, res) {
+        try {
+            const sellerId = req.query.sellerId; // Assuming the authenticated user is the seller
+            const { startDate, endDate } = req.query;
+            
+            const salesData = await sellerOrderService.getSellerSalesData(sellerId, startDate, endDate);
+            
+            res.json(salesData);
+        } catch (error) {
+            console.error('Error fetching seller sales data:', error);
+            res.status(500).json({ error: 'Internal server error' });
         }
     }
 }

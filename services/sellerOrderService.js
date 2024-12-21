@@ -58,7 +58,7 @@ class SellerOrderService {
             // Execute query with pagination
             const orders = await SellerOrder.find(query)
                 .populate('orderId', 'orderNumber totalAmount') // Customize populated fields
-                .populate('productId', 'name images[0] category')
+                .populate('productId', 'title images category')
                 .populate('sellerId', 'name email')
                 .sort({ createdAt: -1 })
                 .skip(skip)
@@ -237,6 +237,89 @@ class SellerOrderService {
     } catch (error) {
         throw new Error(`Error calculating total sales: ${error.message}`);
     }
+    }
+
+    static async getSellerSalesData(sellerId, startDate, endDate) {
+        try {
+            const salesData = await SellerOrder.aggregate([
+                {
+                    $match: {
+                        sellerId: mongoose.Types.ObjectId(sellerId),
+                        createdAt: {
+                            $gte: new Date(startDate),
+                            $lte: new Date(endDate)
+                        }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            day: { $dayOfMonth: "$createdAt" },
+                            month: { $month: "$createdAt" },
+                            year: { $year: "$createdAt" }
+                        },
+                        totalSales: { $sum: "$saleAmount" },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $sort: {
+                        "_id.year": 1,
+                        "_id.month": 1,
+                        "_id.day": 1
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            month: "$_id.month",
+                            year: "$_id.year"
+                        },
+                        dailySales: {
+                            $push: {
+                                day: "$_id.day",
+                                totalSales: "$totalSales",
+                                count: "$count"
+                            }
+                        },
+                        monthlySales: { $sum: "$totalSales" },
+                        monthlyCount: { $sum: "$count" }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        month: "$_id.month",
+                        year: "$_id.year",
+                        dailySales: 1,
+                        monthlySales: 1,
+                        monthlyCount: 1,
+                        monthlyGrowth: {
+                            $cond: [
+                                { $eq: ["$_id.month", 1] },
+                                null,
+                                {
+                                    $subtract: [
+                                        "$monthlySales",
+                                        { $arrayElemAt: ["$previousMonthSales.monthlySales", 0] }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    $sort: {
+                        year: 1,
+                        month: 1
+                    }
+                }
+            ]);
+            
+            return salesData;
+        } catch (error) {
+            throw new Error('Error fetching seller sales data');
+        }
     }
     
 }
