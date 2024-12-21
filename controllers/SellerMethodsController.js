@@ -18,14 +18,10 @@ class SellerOrderController {
         }
     }
 
-    static async getOrders(req, res) {
+    static async getSellerOrders(req, res) {
         try {
             const filters = {
                 sellerId: req.query.sellerId,
-                orderStatus: req.query.orderStatus,
-                paymentStatus: req.query.paymentStatus,
-                startDate: req.query.startDate,
-                endDate: req.query.endDate
             };
 
             const pagination = {

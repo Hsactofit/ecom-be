@@ -1,20 +1,34 @@
 const SellerOrder = require('../models/sellerOrders');
+const mongoose = require('mongoose');
+const {logError } = require('../utils/logError');
 class SellerOrderService {
     static async createSellerOrder(orderData) {
         try {
-            const newOrder = new SellerOrder({
-                orderId: orderData.orderId,
-                productId: orderData.productId,
-                sellerId: orderData.sellerId,
-                saleAmount: orderData.saleAmount,
-                orderStatus: orderData.orderStatus || 'pending',
-                shippingDetails: orderData.shippingDetails || {}
+            let {
+                orderId,
+                productId,
+                sellerId,
+                saleAmount,
+                orderStatus,
+                shippingDetails
+            } = orderData;
+            orderId = mongoose.Types.ObjectId(orderId);
+            productId = mongoose.Types.ObjectId(productId);
+            sellerId = mongoose.Types.ObjectId(sellerId);
+            const newSellerOrder = new SellerOrder({
+                orderId,
+                productId,
+                sellerId,
+                saleAmount,
+                orderStatus,
+                shippingDetails
             });
 
-            const savedOrder = await newOrder.save();
-            return savedOrder;
+            const savedSellerOrder = await newSellerOrder.save();
+            return savedSellerOrder;
         } catch (error) {
-            throw new Error(`Error creating seller order: ${error.message}`);
+            logError('createSellerOrder', error, { orderData });
+            return null;
         }
     }
 
@@ -30,21 +44,21 @@ class SellerOrderService {
                 query.sellerId = filters.sellerId;
             }
             
-            if (filters.orderStatus) {
-                query.orderStatus = filters.orderStatus;
-            }
+            // if (filters.orderStatus) {
+            //     query.orderStatus = filters.orderStatus;
+            // }
 
-            if (filters.startDate && filters.endDate) {
-                query.createdAt = {
-                    $gte: new Date(filters.startDate),
-                    $lte: new Date(filters.endDate)
-                };
-            }
+            // if (filters.startDate && filters.endDate) {
+            //     query.createdAt = {
+            //         $gte: new Date(filters.startDate),
+            //         $lte: new Date(filters.endDate)
+            //     };
+            // }
 
             // Execute query with pagination
             const orders = await SellerOrder.find(query)
                 .populate('orderId', 'orderNumber totalAmount') // Customize populated fields
-                .populate('productId', 'name price')
+                .populate('productId', 'name images[0] category')
                 .populate('sellerId', 'name email')
                 .sort({ createdAt: -1 })
                 .skip(skip)

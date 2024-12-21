@@ -14,7 +14,7 @@ const sellerOrderSchema = new mongoose.Schema({
     sellerId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: 'Seller'  // Assuming you have a Seller model
+        ref: 'User'  // Assuming you have a Seller model
     },
     saleAmount: {
         type: Number,

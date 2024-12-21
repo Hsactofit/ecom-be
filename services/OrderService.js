@@ -4,6 +4,8 @@ const Product = require('../models/Product');
 const ProductSearchService = require('../services/product/ProductSearchService');
 const {logError} = require('../utils/logError');
 const mongoose = require('mongoose');
+const sellerOrderService = require('../services/sellerOrderService');
+const ProductService = require('../services/product/ProductService');
 
 const orderService = {
     /**
@@ -12,24 +14,25 @@ const orderService = {
     async createOrderFromCart(userId, shippingAddress, paymentMethod) {
         try {
             // Fetch the active cart for the user
-            const cart = await Cart.findOne({ userId, status: 'active' })
-
+            const cart = await Cart.findOne({ userId, status: 'active' });
             if (!cart || cart.items.length === 0) {
-                throw new Error('Cart is empty');
+                logError('createOrderFromCart', 'Cart is empty', { userId });
+                return null;
             }
 
             // Calculate total amount
             const totalAmount = cart.items.reduce((total, item) => {
-                return total + item.productId.price * item.quantity;
+                return total + item.productPrice * item.quantity;
             }, 0);
+            console.log("mycart",cart, totalAmount);
 
             // Create the order
             const newOrder = new Order({
                 userId,
                 items: cart.items.map(item => ({
-                    productId: item.productId._id,
+                    productId: item.productId,
                     quantity: item.quantity,
-                    price: item.productId.price,
+                    price: item.productPrice,
                     placedAt: Date.now(),
                     product_order_status: 'Processing'
                 })),
@@ -49,6 +52,20 @@ const orderService = {
             // Save the order
             const savedOrder = await newOrder.save();
 
+            // Manage seller Orders
+            savedOrder.items.forEach(async (item) =>{
+                const orderData={
+                    orderId: savedOrder._id,
+                    productId: item.productId,
+                    sellerId:await ProductService.getSellerIdFromProductId(item.productId),
+                    saleAmount: item.price * item.quantity,
+                    orderStatus: item.product_order_status,
+                    shippingDetails: savedOrder.shippingDetails || {}
+                };
+                console.log("orderData", orderData);
+                await sellerOrderService.createSellerOrder(orderData);
+            });
+
             // Clear the cart after placing the order
             cart.items = [];
             await cart.save();
@@ -56,7 +73,7 @@ const orderService = {
             return savedOrder;
         } catch (error) {
             logError('createOrderFromCart', error, { userId, paymentMethod });
-            throw new Error('Failed to create order from cart');
+            return null;
         }
     },
 
@@ -68,11 +85,13 @@ const orderService = {
             // Fetch the product details
             const product = await Product.findById(productId);
             if (!product) {
-                throw new Error('Product not found');
+                logError('createOrderForSingleProduct', 'Product not found', { userId, productId });
+                return null;
             }
 
             if (quantity <= 0) {
-                throw new Error('Quantity must be greater than 0');
+                logError('createOrderForSingleProduct', 'Quantity must be greater than 0', { userId, productId, quantity });
+                return null;
             }
 
             // Calculate total amount
@@ -109,7 +128,7 @@ const orderService = {
             return savedOrder;
         } catch (error) {
             logError('createOrderForSingleProduct', error, { userId, productId, quantity });
-            throw new Error('Failed to create order for single product');
+            return null;
         }
     },
 
@@ -125,7 +144,8 @@ const orderService = {
             console.log(order); // Optional: Can be removed or replaced with a logger
             
             if (!order) {
-                throw new Error('Order or item not found');
+                logError('updateProductOrderStatus', 'Order or item not found', { orderId, itemId, sellerId, newStatus });
+                return null;
             }
     
             const result = order.items.map((item, index) => ({
@@ -136,11 +156,13 @@ const orderService = {
             const { index: itemIndex, item } = result;
             
             if (item.productId.seller.toString() !== sellerId) {
-                throw new Error('Seller is not authorized to update this product status.');
+                logError('updateProductOrderStatus', 'Seller is not authorized to update this product status', { orderId, itemId, sellerId, newStatus });
+                return null;
             }
     
             if (itemIndex === -1) {
-                throw new Error('Item not found in order');
+                logError('updateProductOrderStatus', 'Item not found in order', { orderId, itemId, sellerId, newStatus });
+                return null;
             }
     
             // Create update object
@@ -189,7 +211,7 @@ const orderService = {
         } catch (error) {
             // Log error with relevant details
             logError('updateProductOrderStatus', error, { orderId, itemId, sellerId, newStatus });
-            throw new Error('Failed to update product order status');
+            return null;
         }
     },
     
@@ -218,7 +240,8 @@ const orderService = {
             );
 
             if (!order) {
-                throw new Error('Order not found');
+                logError('getOrderById', 'Order not found', { orderId });
+                return null;
             }
             
             return {
@@ -227,7 +250,7 @@ const orderService = {
             };
         } catch (error) {
             logError('getOrderById', error, { orderId });
-            throw new Error('Failed to retrieve order');
+            return null;
         }
     },
 
@@ -241,7 +264,7 @@ const orderService = {
             return orders;
         } catch (error) {
             logError('getUserOrders', error, { userId });
-            throw new Error('Failed to retrieve user orders');
+            return null;
         }
     },
     async getSellerOrderSummary(orders) {
@@ -329,12 +352,13 @@ const orderService = {
                 { new: true }
             );
             if (!order) {
-                throw new Error('Order not found or already cancelled');
+                logError('cancelOrder', 'Order not found or already cancelled', { orderId, userId });
+                return null;
             }
             return order;
         } catch (error) {
             logError('cancelOrder', error, { orderId, userId });
-            throw new Error('Failed to cancel order');
+            return null;
         }
     }
 };
