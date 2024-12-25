@@ -17,10 +17,23 @@ router.post(
   authenticateToken,
   orderController.createOrderForSingleProduct
 );
+
+router.put(
+  "/sellerOrder/:id/status",
+  // authenticateToken,
+  // checkRole("seller"), // Only sellers should be able to update order status
+  orderController.updateProductSellerOrderStatus
+);
+
 // Get all orders for a seller (private route, user must be authenticated and role must be seller)
 router.get(
   "/sellerOrders",
   sellerOrderController.getSellerOrders
+);
+
+router.get(
+  "/sellerOrder/:id",
+  sellerOrderController.getOrderById
 );
 
 router.get('/sellers/sales-data', sellerOrderController.getSellerSalesData);

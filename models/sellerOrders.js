@@ -16,6 +16,16 @@ const sellerOrderSchema = new mongoose.Schema({
         required: true,
         ref: 'User'  // Assuming you have a Seller model
     },
+    customerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'  // Assuming you have a Seller model
+    },
+    orderGroupId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Order'  // Assuming you have a Seller model
+    },
     saleAmount: {
         type: Number,
         required: true,
@@ -25,6 +35,22 @@ const sellerOrderSchema = new mongoose.Schema({
         type: String,
         enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'],
         default: 'pending'
+    },
+    shippedAt: {
+        type: Date,
+    },
+    deliveredAt: {
+        type: Date
+    },
+    placedAt: {
+        type: Date,
+        default: Date.now
+    },
+    cancelledAt: {
+        type: Date
+    },
+    returnedAt: {
+        type: Date
     },
     createdAt: {
         type: Date,

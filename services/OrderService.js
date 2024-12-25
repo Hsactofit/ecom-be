@@ -49,19 +49,25 @@ const orderService = {
                     country: shippingAddress.country
                 }
             });
-            console.log("neworder", newOrder);
             // Save the order
             const savedOrder = await newOrder.save();
 
+            console.log("SavedOrder", savedOrder);
+            const groupOrderId = savedOrder._id;
+            console.log("SavedOrderId", groupOrderId);
+            
             // Manage seller Orders
             savedOrder.items.forEach(async (item) =>{
                 const orderData={
-                    orderId: savedOrder._id,
+                    orderGroupId: groupOrderId,
+                    orderId: item._id,
                     productId: item.productId,
+                    customerId: userId,
                     sellerId:await ProductService.getSellerIdFromProductId(item.productId),
                     saleAmount: item.price * item.quantity,
                     orderStatus: item.product_order_status,
-                    shippingDetails: savedOrder.shippingDetails || {}
+                    shippingDetails: savedOrder.shippingDetails || {},
+                    placedAt: item.placedAt
                 };
                 console.log("orderData", orderData);
                 await sellerOrderService.createSellerOrder(orderData);
@@ -107,7 +113,7 @@ const orderService = {
                         quantity,
                         price: product.price,
                         placedAt: Date.now(),
-                        product_order_status: 'Processing'
+                        product_order_status: 'Pending'
                     }
                 ],
                 totalAmount,

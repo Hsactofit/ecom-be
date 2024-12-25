@@ -1,24 +1,33 @@
 const SellerOrder = require('../models/sellerOrders');
+const Order = require('../models/Order');
+
 const mongoose = require('mongoose');
 const {logError } = require('../utils/logError');
 class SellerOrderService {
     static async createSellerOrder(orderData) {
         try {
             let {
+                orderGroupId,
                 orderId,
                 productId,
                 sellerId,
+                customerId,
                 saleAmount,
                 orderStatus,
-                shippingDetails
+                shippingDetails,
+                placedAt
             } = orderData;
             orderId = mongoose.Types.ObjectId(orderId);
             productId = mongoose.Types.ObjectId(productId);
             sellerId = mongoose.Types.ObjectId(sellerId);
+            customerId = mongoose.Types.ObjectId(customerId);
+            
             const newSellerOrder = new SellerOrder({
                 orderId,
+                orderGroupId,
                 productId,
                 sellerId,
+                customerId,
                 saleAmount,
                 orderStatus,
                 shippingDetails
@@ -84,9 +93,10 @@ class SellerOrderService {
     static async getSellerOrderById(orderId) {
         try {
             const order = await SellerOrder.findById(orderId)
-                .populate('orderId', 'orderNumber totalAmount')
-                .populate('productId', 'name price')
-                .populate('sellerId', 'name email');
+                .populate('orderGroupId', 'orderNumber totalAmount order_status shippingAddress ')
+                .populate('productId', 'title category images')
+                .populate('sellerId', 'name email')
+                .populate('customerId', 'name email phone');
 
             if (!order) {
                 throw new Error('Order not found');
@@ -321,6 +331,108 @@ class SellerOrderService {
             throw new Error('Error fetching seller sales data');
         }
     }
+
+    static async updateProductSellerOrderStatus(sellerOrderId, newStatus) {
+            try {
+                // Find the order and ensure the product belongs to the seller
+                const sellerOrder = await SellerOrder.findById(sellerOrderId);
+                
+                if(!sellerOrder)
+                {
+                    logError('updateProductOrderStatus', 'SellerOrder not found', { sellerOrderId, newStatus });
+                    return null;
+                }
+                const order = await Order.findOne(
+                                {
+                                    _id: sellerOrder?.orderGroupId
+                                }
+                            ).populate('items.productId');
+                console.log(order); // Optional: Can be removed or replaced with a logger
+                
+                if (!order) {
+                    logError('updateProductOrderStatus', 'Order or item not found', { sellerOrderId, newStatus });
+                    return null;
+                }
+        
+                const result = order.items.map((item, index) => ({
+                    index,
+                    item
+                })).find(result => result.item.productId._id.toString() === sellerOrder.productId.toString());
+                console.log("res",result);
+                
+                const { index, item } = result;
+                
+                if (item.productId.seller.toString() !== sellerOrder.sellerId.toString()) {
+                    logError('updateProductOrderStatus', 'Seller is not authorized to update this product status', { sellerOrderId, newStatus });
+                    return null;
+                }
+        
+                if (index === -1) {
+                    logError('updateProductOrderStatus', 'Item not found in order', { sellerOrderId, newStatus });
+                    return null;
+                }
+                console.log("index", index);
+        
+                // Create update object
+                const updateObj = {
+                    [`items.${index}.product_order_status`]: newStatus
+                };
+        
+                // Add timestamps if needed
+                if (newStatus === 'Shipped') {
+                    updateObj[`items.${index}.shippedAt`] = new Date();
+                    updateObj[`items.${index}.product_order_status`] = newStatus;
+                    
+                    sellerOrder.shippedAt = new Date();
+                }
+                if (newStatus === 'Delivered') {
+                    updateObj[`items.${index}.deliveredAt`] = new Date();
+                    updateObj[`items.${index}.product_order_status`] = newStatus;
+                    sellerOrder.deliveredAt = new Date();
+                }
+                if (newStatus === 'Cancelled') {
+                    updateObj[`items.${index}.cancelledAt`] = new Date();
+                    updateObj[`items.${index}.product_order_status`] = newStatus;
+                    sellerOrder.cancelledAt = new Date();
+                }
+                if (newStatus === 'Returned') {
+                    updateObj[`items.${index}.returnedAt`] = new Date();
+                    updateObj[`items.${index}.product_order_status`] = newStatus;
+                    sellerOrder.returnedAt = new Date();
+                }
+        
+                // Update the order
+                const updatedOrder = await Order.findOneAndUpdate(
+                    { _id: sellerOrder?.orderGroupId },
+                    { $set: updateObj },
+                    { 
+                        new: true,
+                        runValidators: true
+                    }
+                ).populate('items.productId');
+        
+                // Check if all items are delivered to update order status
+                const allItemsDelivered = updatedOrder.items.every(
+                    item => item.product_order_status === 'Delivered'
+                );
+        
+                if (allItemsDelivered) {
+                    updatedOrder.order_status = 'Completed';    
+                    await updatedOrder.save();
+                }
+        
+                // Log the successful update
+                console.log(`Order ${sellerOrderId} - Item ${sellerOrder.productId} status updated to ${newStatus}`);
+                sellerOrder.orderStatus = newStatus;
+                sellerOrder.save();
+                return updatedOrder;
+        
+            } catch (error) {
+                // Log error with relevant details
+                logError('updateProductOrderStatus', error, { sellerOrderId, newStatus });
+                return null;
+            }
+        }
     
 }
 
