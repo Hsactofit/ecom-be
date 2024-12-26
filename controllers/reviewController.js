@@ -287,8 +287,9 @@ class ReviewController {
       console.log("Request Received....");
 
       if (!reviews || reviews.length === 0) {
-        return res.status(404).json({
+        return res.json({
           success: false,
+          reviews: [],
           message: "No reviews found for this product",
         });
       }

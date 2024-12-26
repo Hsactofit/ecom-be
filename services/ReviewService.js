@@ -12,6 +12,7 @@ class ReviewService {
 
     // Validate if the product ID exists
     const productExists = await Product.findById(data.product);
+
     if (!productExists) {
       throw new Error("Invalid product ID");
     }
@@ -24,15 +25,6 @@ class ReviewService {
       title: data.title,
       comment: data.comment,
     });
-    // const review = await Review.create({
-    //   product: data.product, // Store product ID only
-    //   user: data.user, // User ID
-    //   seller: data.seller, // Seller ID
-    //   rating: data.rating,
-    //   title: data.title,
-    //   comment: data.comment,
-    // });
-    // console.log(review);
 
     await review.save();
     return review;
@@ -160,11 +152,10 @@ class ReviewService {
         timestamp: new Date().toISOString(),
       });
 
-      // Find all reviews for the product
-      const reviews = await Review.find({ product: productId }).populate(
-        "user",
-        "username email"
-      );
+      // Find all reviews for the product and sort by newest first
+      const reviews = await Review.find({ product: productId })
+        .populate("user", "username email")
+        .sort({ createdAt: -1 }); // Sorting in descending order by createdAt
 
       console.log("[ReviewService getReviewsByProductId Success]:", {
         productId,
