@@ -9,6 +9,7 @@ const cartRoutes = require("./cart");
 const wishlistRoutes = require("./wishlist");
 const negotiatedProductRoutes = require("./negotiatedProduct");
 const reviewRoutes = require("./review");
+const chatRoutes = require("./chat");
 
 // API versioning
 const API_VERSION = "/api/v1";
@@ -18,6 +19,7 @@ router.use(`${API_VERSION}/auth`, authRoutes);
 router.use(`${API_VERSION}/users`, userRoutes);
 router.use(`${API_VERSION}/products`, productRoutes);
 router.use(`${API_VERSION}/cart`, cartRoutes);
+router.use(`${API_VERSION}/chat`, chatRoutes );
 router.use(`${API_VERSION}/wishlist`, wishlistRoutes);
 router.use(`${API_VERSION}/order`, orderRoutes);
 router.use(`${API_VERSION}/negotiated`, negotiatedProductRoutes);

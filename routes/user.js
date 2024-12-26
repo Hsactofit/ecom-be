@@ -45,8 +45,8 @@ router.patch(
 // Get all sellers (accessible by admin only)
 router.get(
   "/sellers",
-  authenticateToken,
-  checkRole("admin"),
+  // authenticateToken,
+  // checkRole("admin"),
   UserController.getAllSellers
 );
 
