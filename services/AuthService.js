@@ -8,15 +8,22 @@ const { OAuth2Client } = require("google-auth-library");
 const config = require("../config/appConfig");
 const { logError } = require("../utils/logError");
 const { default: mongoose } = require("mongoose");
+const axios = require('axios');
 
 class AuthService {
   constructor() {
     try {
       this.googleClient = new OAuth2Client(config.google.clientId);
-      this.twilioClient = twilio(
-        config.twilio.accountSid,
-        config.twilio.authToken
-      );
+      // this.twilioClient = twilio(
+      //   config.twilio.accountSid,
+      //   config.twilio.authToken
+      // );
+      this.accessKeyId = config.aws.accessKeyId;
+      this.secretKey = config.aws.secretAccessKey;
+      this.region = config.aws.region || 'us-east-1';
+      this.endpoint = `https://sns.${this.region}.amazonaws.com`;
+      this.service = 'sns';
+
       this.emailTransporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -106,26 +113,107 @@ class AuthService {
     }
   }
 
+  // async sendPhoneVerification(phone, code) {
+  //   try {
+  //     if (!phone || !code) {
+  //       throw new Error("Phone number and code are required");
+  //     }
+  //
+  //     await this.twilioClient.messages.create({
+  //       body: `Your verification code is: ${code}`,
+  //       to: phone,
+  //       messagingServiceSid: config.twilio.messagingServiceSid,
+  //     });
+  //
+  //     console.log("[AuthService sendPhoneVerification Success]:", {
+  //       phone: phone.slice(-4), // Log only last 4 digits for privacy
+  //       timestamp: new Date().toISOString(),
+  //     });
+  //   } catch (error) {
+  //     logError("sendPhoneVerification", error, {
+  //       phone: phone?.slice(-4),
+  //       hasCode: !!code,
+  //     });
+  //     throw error;
+  //   }
+  // }
+
   async sendPhoneVerification(phone, code) {
     try {
       if (!phone || !code) {
         throw new Error("Phone number and code are required");
       }
 
-      await this.twilioClient.messages.create({
-        body: `Your verification code is: ${code}`,
-        to: phone,
-        messagingServiceSid: config.twilio.messagingServiceSid,
-      });
+      const timestamp = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
+
+      // Parameters for the request
+      const params = {
+        Action: 'Publish',
+        Message: `Your verification code is: ${code}`,
+        PhoneNumber: phone,
+        'MessageAttributes.entry.1.Name': 'AWS.SNS.SMS.SMSType',
+        'MessageAttributes.entry.1.Value.DataType': 'String',
+        'MessageAttributes.entry.1.Value.StringValue': 'Transactional',
+        SignatureMethod: 'HmacSHA256',
+        SignatureVersion: '2',
+        Timestamp: timestamp,
+        Version: '2010-03-31',
+        AWSAccessKeyId: this.accessKeyId
+      };
+
+      // Create the canonical string
+      const canonicalQueryString = Object.keys(params)
+          .sort()
+          .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+          .join('&');
+
+      // Create the string to sign
+      const stringToSign = [
+        'POST',
+        `sns.${this.region}.amazonaws.com`,
+        '/',
+        canonicalQueryString
+      ].join('\n');
+
+      // Calculate signature
+      const signature = crypto
+          .createHmac('sha256', this.secretKey)
+          .update(stringToSign)
+          .digest('base64');
+
+      // Add signature to parameters
+      params.Signature = signature;
+
+      // Convert params to query string
+      const finalQueryString = Object.keys(params)
+          .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+          .join('&');
+
+      // Make the request
+      const response = await axios.post(
+          `https://sns.${this.region}.amazonaws.com/`,
+          finalQueryString,
+          {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Host': `sns.${this.region}.amazonaws.com`
+            }
+          }
+      );
 
       console.log("[AuthService sendPhoneVerification Success]:", {
-        phone: phone.slice(-4), // Log only last 4 digits for privacy
+        phone: phone.slice(-4),
         timestamp: new Date().toISOString(),
       });
+
+      return response.data;
+
     } catch (error) {
-      logError("sendPhoneVerification", error, {
+      console.error("[AuthService sendPhoneVerification Error]:", {
         phone: phone?.slice(-4),
         hasCode: !!code,
+        error: error.message,
+        details: error.response?.data
       });
       throw error;
     }
@@ -196,7 +284,7 @@ class AuthService {
       // Send verification emails and SMS in parallel
       await Promise.all([
         // this.sendVerificationEmail(userData.email, emailToken),
-        // this.sendPhoneVerification(userData.phone, phoneCode)
+        this.sendPhoneVerification(userData.phone, phoneCode)
       ]);
 
       console.log("[AuthService createUser Success]:", {
