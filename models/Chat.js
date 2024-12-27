@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
-
 const messageSchema = new mongoose.Schema({
   senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   message: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
+  read: { type: Boolean, default: false } // Add this field
 });
 
 const chatSchema = new mongoose.Schema({
@@ -16,7 +16,13 @@ const chatSchema = new mongoose.Schema({
   lastMessage: {
     senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     message: { type: String },
-    timestamp: { type: Date, default: Date.now },
+    timestamp: { type: Date },
+    read: { type: Boolean, default: false } // Add this field
+  },
+  unreadCount: { // Add this field to track unread messages for each participant
+    type: Map,
+    of: Number,
+    default: new Map()
   },
   updatedAt: { type: Date, default: Date.now },
 });
