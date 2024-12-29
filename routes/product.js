@@ -33,8 +33,6 @@ router.post(
 
 router.put(
   "/:productId",
-  authenticateToken,
-  checkRole("seller"),
   productController.updateProduct
 );
 

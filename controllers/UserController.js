@@ -145,6 +145,28 @@ class UserController {
             return res.status(500).json({ message: 'Error retrieving sellers', error: error.message });
         }
     }
+
+    async searchSellers(req, res){
+        const { query, page = 1 } = req.query; // Default page is 1
+        const limit = 3; // Maximum 4 records per page
+
+        try {
+            if (!query || query.trim() === "") {
+                return res.status(400).json({ success: false, message: "Search query is required." });
+            }
+
+            // Call the service method
+            const result = await UserService.searchSellers(query, parseInt(page), limit);
+
+            res.status(200).json({
+                success: true,
+                data: result
+            });
+        } catch (error) {
+            console.error("Error searching sellers:", error);
+            res.status(500).json({ success: false, message: "Error searching sellers.", error: error.message });
+        }
+    };
 }
 
 module.exports = new UserController();

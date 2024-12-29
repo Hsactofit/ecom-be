@@ -50,4 +50,7 @@ router.get(
   UserController.getAllSellers
 );
 
+
+router.get("/searchSellers", UserController.searchSellers);
+
 module.exports = router;

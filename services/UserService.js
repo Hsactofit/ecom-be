@@ -175,6 +175,26 @@ class UserService {
             throw new Error(error.message);
         }
     };
+
+    async searchSellers(query) {
+        try {
+            const sellers = await User.find({
+                role: { $in: ['seller', 'reseller'] }, // Role should be seller or reseller
+                isVerified: true, // Assuming isActive is implied by your schema structure
+                $or: [
+                    { name: { $regex: query, $options: 'i' } }, // Search by name
+                    { email: { $regex: query, $options: 'i' } }, // Search by email
+                    { 'businessProfile.storeName': { $regex: query, $options: 'i' } }, // Search by store name
+                    { 'businessProfile.description': { $regex: query, $options: 'i' } }, // Search by description
+                    { 'businessProfile.location': { $regex: query, $options: 'i' } }, // Search by location
+                ]
+            }).select('-password -resetToken -resetTokenExpiration').limit(3); // Exclude sensitive fields
+            return sellers;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+    
 }
 
 module.exports = new UserService();

@@ -1,5 +1,34 @@
 const Chat = require("../models/Chat");
 
+
+exports.fetchUnreadChats = async (req, res) => {
+  const { userId } = req.query; // Extract userId from query params
+
+  try {
+    // Find all chats where the user has unread messages
+    const chats = await Chat.find({
+      [`unreadCount.${userId}`]: { $gt: 0 }, // Match chats with unread count greater than 0 for the user
+    })
+      .select("participants lastMessage unreadCount") // Select only necessary fields
+      .populate("participants", "name"); // Populate participant names
+
+    // Transform the response
+    const unreadChats = chats.map((chat) => ({
+      chatId: chat._id,
+      participants: chat.participants,
+      lastMessage: chat.lastMessage,
+      unreadCount: chat.unreadCount.get(userId) || 0, // Get unread count for the user
+    }));
+
+    return res.status(200).json({ success: true, unreadChats });
+  } catch (error) {
+    console.error("Error fetching unread chats:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch unread chats", error });
+  }
+};
+
 exports.getOrCreateChat = async (req, res) => {
   const { userId, otherUserId } = req.body;
 

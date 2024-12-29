@@ -14,4 +14,7 @@ router.get("/getChatHistory/:chatId", chatController.getChatHistory);
 // Fetch User's Chat Previews
 router.get("/getUserChats/:userId", chatController.getUserChats);
 
+
+router.get("/fetchUnreadChats", chatController.fetchUnreadChats);
+
 module.exports = router;
