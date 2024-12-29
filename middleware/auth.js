@@ -17,7 +17,7 @@ const auth = {
         });
       }
 
-      console.log("My token:", token);
+      // console.log("My token:", token);
 
       // Verify the token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);

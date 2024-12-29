@@ -21,18 +21,17 @@ class AuthController {
       const cookieData = {
         token,
         userID: user.id,
-        expiry: Date.now() + (24 * 60 * 60 * 1000) // JWT expiry time (7 days from now)
+        expiry: Date.now() + 24 * 60 * 60 * 1000, // JWT expiry time (7 days from now)
       };
-      
 
-        res.cookie("technology-heaven-token", cookieData, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production', // Dynamic secure flag
-          sameSite: 'None', // Explicitly None
-          domain: '.technologyheaven.in', // Dot-prefixed domain
-          path: '/', // Ensure path is root
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
+      res.cookie("technology-heaven-token", cookieData, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // Dynamic secure flag
+        sameSite: "None", // Explicitly None
+        domain: ".technologyheaven.in", // Dot-prefixed domain
+        path: "/", // Ensure path is root
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
       res.status(201).json({
         success: true,
@@ -50,8 +49,6 @@ class AuthController {
   async login(req, res) {
     try {
       const { email, password } = req.body;
-
-      console.log(email, password);
 
       const user = await AuthService.verifyLogin(email, password);
 
@@ -72,10 +69,10 @@ class AuthController {
       const token = AuthService.generateToken(user._id);
       user.lastLogin = Date.now();
       await user.save();
-      
-      res.cookie('technology-heaven-token', token, {
-        domain: '.technologyheaven.in', // Critical for multiple subdomains
-        path: '/',
+
+      res.cookie("technology-heaven-token", token, {
+        domain: ".technologyheaven.in", // Critical for multiple subdomains
+        path: "/",
         httpOnly: true,
         secure: true, // Must be true for production/HTTPS
         sameSite: "None", // Allows cross-site cookie sharing
@@ -236,10 +233,9 @@ class AuthController {
 
   async relogin(req, res) {
     try {
-      console.log(req);
       // Extract required fields from req.user
       const { token } = req.body;
-      console.log("mytoken", token);
+      // console.log("mytoken", token);
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(decoded.userId).select("-password");
 

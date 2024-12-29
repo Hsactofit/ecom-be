@@ -10,6 +10,7 @@ const wishlistRoutes = require("./wishlist");
 const negotiatedProductRoutes = require("./negotiatedProduct");
 const reviewRoutes = require("./review");
 const chatRoutes = require("./chat");
+const adminRoutes = require("./adminRoutes");
 
 // API versioning
 const API_VERSION = "/api/v1";
@@ -19,11 +20,12 @@ router.use(`${API_VERSION}/auth`, authRoutes);
 router.use(`${API_VERSION}/users`, userRoutes);
 router.use(`${API_VERSION}/products`, productRoutes);
 router.use(`${API_VERSION}/cart`, cartRoutes);
-router.use(`${API_VERSION}/chat`, chatRoutes );
+router.use(`${API_VERSION}/chat`, chatRoutes);
 router.use(`${API_VERSION}/wishlist`, wishlistRoutes);
 router.use(`${API_VERSION}/order`, orderRoutes);
 router.use(`${API_VERSION}/negotiated`, negotiatedProductRoutes);
 router.use(`${API_VERSION}/review`, reviewRoutes);
+router.use(`${API_VERSION}/admin`, adminRoutes);
 
 // Health check route
 router.get(`${API_VERSION}/health`, (req, res) => {

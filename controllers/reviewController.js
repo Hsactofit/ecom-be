@@ -17,8 +17,6 @@ class ReviewController {
         comment,
       });
 
-      console.log(review);
-
       res.status(201).json({
         success: true,
         review,
@@ -283,8 +281,6 @@ class ReviewController {
     try {
       const { productId } = req.params;
       const reviews = await ReviewService.getReviewsByProductId(productId);
-
-      console.log("Request Received....");
 
       if (!reviews || reviews.length === 0) {
         return res.json({
