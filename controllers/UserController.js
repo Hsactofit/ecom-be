@@ -147,7 +147,7 @@ class UserController {
     }
 
     async searchSellers(req, res){
-        const { query, page = 1 } = req.query; // Default page is 1
+        const { query, excludeId, page = 1 } = req.query; // Default page is 1
         const limit = 3; // Maximum 4 records per page
 
         try {
@@ -156,7 +156,7 @@ class UserController {
             }
 
             // Call the service method
-            const result = await UserService.searchSellers(query, parseInt(page), limit);
+            const result = await UserService.searchSellers(query, excludeId, parseInt(page), limit);
 
             res.status(200).json({
                 success: true,

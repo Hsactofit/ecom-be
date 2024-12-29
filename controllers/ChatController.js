@@ -53,6 +53,61 @@ exports.getOrCreateChat = async (req, res) => {
   }
 };
 
+exports.fetchChatUsers = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find all chats where the user is a participant
+    const chats = await Chat.find({
+      participants: userId,
+      // Ensure both participants exist
+      $expr: {
+        $eq: [{ $size: "$participants" }, 2]
+      }
+    })
+    .populate({
+      path: 'participants',
+      match: { _id: { $ne: userId } }, // Only populate the other participant
+      select: 'name email status' // Select needed fields
+    })
+    .select('participants lastMessage unreadCount');
+
+    // Filter out any chats where population failed (null participants)
+    const validChats = chats.filter(chat => 
+      chat.participants && 
+      chat.participants.length > 0 && 
+      chat.participants[0] !== null
+    );
+    console.log("valid", validChats);
+    // Extract and format the users with their last message and unread count
+    const chatUsers = validChats.map(chat => {
+      const otherUser = chat.participants[0];
+      return {
+        _id: otherUser._id,
+        name: otherUser.name,
+        email: otherUser.email,
+        status: otherUser.status,
+        lastMessage: chat.lastMessage,
+        unreadCount: chat?.unreadCount?.get(userId.toString()) || 0
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      sellers: chatUsers,
+      count: chatUsers.length
+    });
+
+  } catch (error) {
+    console.error('Fetch chat users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching chat users',
+      error: error.message
+    });
+  }
+};
+
 
 exports.getChatHistory = async (req, res) => {
     const { chatId } = req.params;
