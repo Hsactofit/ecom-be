@@ -9,11 +9,22 @@ const { authenticateToken, checkRole } = require("../middleware/auth");
 
 // ======================= Public Routes =======================
 
-router.put('/seller/:productId/variants/:idx/stock', productController.updateProductStock);
+router.put(
+  "/seller/:productId/variants/:idx/stock",
+  productController.updateProductStock
+);
 
-router.get('/seller/:sellerId/products/stock', productController.getSellerProductsStockLevels);
+router.get("/category/:category", productController.getProductsByCategory);
 
-router.get('/sellers/:sellerId/products', productController.getActiveSellerProducts);
+router.get(
+  "/seller/:sellerId/products/stock",
+  productController.getSellerProductsStockLevels
+);
+
+router.get(
+  "/sellers/:sellerId/products",
+  productController.getActiveSellerProducts
+);
 
 // Product search (accessible to all)
 router.get("/search", productSearchController.searchProducts);
@@ -27,14 +38,9 @@ router.get("/", productController.getAllProducts);
 // ======================= Private Routes =======================
 
 // Protected routes for original products (only for sellers)
-router.post(
-  "/",productController.createProduct
-);
+router.post("/", productController.createProduct);
 
-router.put(
-  "/:productId",
-  productController.updateProduct
-);
+router.put("/:productId", productController.updateProduct);
 
 router.delete(
   "/:productId",
@@ -66,7 +72,7 @@ router.delete(
 );
 
 // Accept product (only for sellers)
-router.patch( 
+router.patch(
   "/:productId/accept",
   authenticateToken,
   checkRole("seller"),
