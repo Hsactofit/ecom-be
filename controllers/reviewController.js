@@ -290,10 +290,6 @@ class ReviewController {
           select: "name email",
         });
 
-      console.log(reviews);
-
-      console.log(reviews);
-
       if (!reviews || reviews.length === 0) {
         return res.json({
           success: false,
