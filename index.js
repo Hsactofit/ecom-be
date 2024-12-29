@@ -20,6 +20,7 @@ const io = new Server(server, {
       "https://shop.technologyheaven.in",
       "https://seller.technologyheaven.in",
       "https://register.technologyheaven.in",
+      "https://admin.technologyheaven.in"
     ],
     methods: ["GET", "POST"],
     credentials: true,
@@ -40,6 +41,7 @@ app.use(
       "https://shop.technologyheaven.in",
       "https://seller.technologyheaven.in",
       "https://register.technologyheaven.in",
+      "https://admin.technologyheaven.in"
     ],
     credentials: true,
   })
@@ -125,15 +127,86 @@ io.on("connection", (socket) => {
 
   socket.on("sendMessage", async ({ chatId, senderId, receiverId, message }) => {
     try {
-      // Remove DB save here, only emit to receiver
+      // Emit to receiver with unread status
       io.to(receiverId).emit("receiveMessage", { 
         chatId,
         senderId, 
         message,
-        timestamp: new Date()
+        timestamp: new Date(),
+        read: false
       });
+
+      // Update unread count in the database
+      await Chat.findByIdAndUpdate(chatId, {
+        $inc: { [`unreadCount.${receiverId}`]: 1 }
+      });
+
+      io.to(receiverId).emit("unreadCountUpdate", { chatId, senderId, count });
     } catch (error) {
       console.error("Error sending message:", error);
+    }
+  });
+  
+  socket.on("fetchUnreadChats", async ( userId) => {
+    try {
+      // Find all chats where the user has unread messages
+      console.log("user",userId);
+      const unreadChats = await Chat.find({
+        [`unreadCount.${userId}`]: { $gt: 0 }
+      });
+  
+      console.log("ubread",unreadChats);
+      // For each unread chat, get the last message and emit it
+      for (const chat of unreadChats) {
+        // Get the last message for this chat
+        const lastMessage = await Chat.findOne({ 
+          chatId: chat._id 
+        }).sort({ timestamp: -1 });
+  
+        if (lastMessage) {
+          // Emit the unread message to the user
+          io.to(userId).emit("receiveMessage", {
+            chatId: chat._id,
+            senderId: lastMessage.senderId,
+            message: lastMessage.message,
+            timestamp: lastMessage.timestamp,
+            read: false
+          });
+  
+          // Also emit the unread count
+          io.to(userId).emit("unreadCountUpdate", {
+            chatId: chat._id,
+            senderId: lastMessage.senderId,
+            count: chat.unreadCount.get(userId) || 0
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching unread chats:", error);
+    }
+  });
+
+  // Add new event for marking messages as read
+  socket.on("markMessagesRead", async ({ chatId, userId }) => {
+    try {
+      await Chat.findByIdAndUpdate(chatId, {
+        $set: {
+          "messages.$[].read": true,
+          "lastMessage.read": true,
+          [`unreadCount.${userId}`]: 0
+        }
+      });
+
+      // Emit to all participants that messages have been read
+      const chat = await Chat.findById(chatId);
+      chat.participants.forEach(participantId => {
+        io.to(participantId.toString()).emit("messagesMarkedRead", {
+          chatId,
+          userId
+        });
+      });
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
     }
   });
   // Handle disconnection
