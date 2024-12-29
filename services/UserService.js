@@ -176,9 +176,10 @@ class UserService {
         }
     };
 
-    async searchSellers(query) {
+    async searchSellers(query, excludeId) {
         try {
             const sellers = await User.find({
+                _id: { $ne: excludeId },
                 role: { $in: ['seller', 'reseller'] }, // Role should be seller or reseller
                 isVerified: true, // Assuming isActive is implied by your schema structure
                 $or: [

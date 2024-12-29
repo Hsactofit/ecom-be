@@ -282,10 +282,10 @@ class AuthService {
       await user.save();
 
       // Send verification emails and SMS in parallel
-      await Promise.all([
-        // this.sendVerificationEmail(userData.email, emailToken),
-        this.sendPhoneVerification(userData.phone, phoneCode)
-      ]);
+      // await Promise.all([
+      //   // this.sendVerificationEmail(userData.email, emailToken),
+      //   this.sendPhoneVerification(userData.phone, phoneCode)
+      // ]);
 
       console.log("[AuthService createUser Success]:", {
         userId: user._id,

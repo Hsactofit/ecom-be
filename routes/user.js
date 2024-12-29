@@ -21,8 +21,6 @@ router.put(
 // Update business profile (accessible by authenticated users)
 router.put(
   "/:userId/business-profile",
-  authenticateToken,
-  checkRole("seller"), // Assuming only sellers can update their business profile
   UserController.updateBusinessProfile
 );
 

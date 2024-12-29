@@ -81,12 +81,18 @@ io.on("connection", (socket) => {
 
   // Handle user typing status
   socket.on("typing", ({ chatId, userId, receiverId }) => {
-    io.to(receiverId).emit("userTyping", { chatId, userId, isTyping: true });
+    const receiverSocketId = onlineUsers.get(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("userTyping", { chatId, userId, isTyping: true });
+    }
   });
-
+  
   // Handle user stopped typing
   socket.on("stopTyping", ({ chatId, userId, receiverId }) => {
-    io.to(receiverId).emit("userTyping", { chatId, userId, isTyping: false });
+    const receiverSocketId = onlineUsers.get(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("userTyping", { chatId, userId, isTyping: false });
+    }
   });
 
   // Handle seller request notification

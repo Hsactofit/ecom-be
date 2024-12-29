@@ -17,4 +17,6 @@ router.get("/getUserChats/:userId", chatController.getUserChats);
 
 router.get("/fetchUnreadChats", chatController.fetchUnreadChats);
 
+router.get('/chatUsers/:userId', chatController.fetchChatUsers);
+
 module.exports = router;
