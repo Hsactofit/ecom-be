@@ -1,3 +1,4 @@
+const Review = require("../models/Review");
 const ReviewService = require("../services/ReviewService");
 
 class ReviewController {
@@ -280,7 +281,18 @@ class ReviewController {
   async getReviewsForProduct(req, res) {
     try {
       const { productId } = req.params;
-      const reviews = await ReviewService.getReviewsByProductId(productId);
+      const reviews = await Review.find({ product: productId })
+        .populate("product", "name price description")
+        .populate("user", "name email")
+        .populate("seller", "name shopName")
+        .populate({
+          path: "replies.replyBy",
+          select: "name email",
+        });
+
+      console.log(reviews);
+
+      console.log(reviews);
 
       if (!reviews || reviews.length === 0) {
         return res.json({
@@ -295,6 +307,7 @@ class ReviewController {
         reviews,
       });
     } catch (error) {
+      console.log(error.message);
       res.status(500).json({
         success: false,
         message: "Error retrieving reviews",
