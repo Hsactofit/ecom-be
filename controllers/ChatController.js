@@ -68,7 +68,7 @@ exports.fetchChatUsers = async (req, res) => {
     .populate({
       path: 'participants',
       match: { _id: { $ne: userId } }, // Only populate the other participant
-      select: 'name email status' // Select needed fields
+      select: 'name email status role' // Select needed fields
     })
     .select('participants lastMessage unreadCount');
 
@@ -78,20 +78,21 @@ exports.fetchChatUsers = async (req, res) => {
       chat.participants.length > 0 && 
       chat.participants[0] !== null
     );
-    console.log("valid", validChats);
     // Extract and format the users with their last message and unread count
     const chatUsers = validChats.map(chat => {
       const otherUser = chat.participants[0];
+      console.log("validchats", otherUser);
       return {
         _id: otherUser._id,
         name: otherUser.name,
         email: otherUser.email,
         status: otherUser.status,
+        role: otherUser.role,
         lastMessage: chat.lastMessage,
         unreadCount: chat?.unreadCount?.get(userId.toString()) || 0
       };
     });
-
+    console.log(chatUsers);
     res.status(200).json({
       success: true,
       sellers: chatUsers,
