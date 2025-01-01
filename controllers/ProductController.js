@@ -160,7 +160,8 @@ class ProductController {
 
   async getAllProducts(req, res) {
     try {
-      const products = await ProductService.getAllProducts();
+      const {status} = req.query;
+      const products = await ProductService.getAllProducts(status);
 
       if (!products.length) {
         return res.status(404).json({ message: "No products found" });

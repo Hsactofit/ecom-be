@@ -151,10 +151,11 @@ class ProductService {
         }
     };
 
-    async getAllProducts() {
+    async getAllProducts(status) {
         try {
+            status = status || "active";
             // Fetch all products
-            const products = await Product.find()
+            const products = await Product.find({ status })
                 .populate('seller', 'name email') // Populate seller details (name and email)
                 .select('-__v'); // Exclude the `__v` field from the response
             return products;
