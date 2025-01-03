@@ -157,9 +157,9 @@ const wishlistService = {
             }
     
             const existingProduct = user.wishlist.filter(id => id.toString() === productId);
-    
+            console.log("exxisting", existingProduct, userId,productId);
             if (action === 'add') {
-                if (!existingProduct) {
+                if (!existingProduct || existingProduct.length == 0) {
                     user.wishlist.push(productId);
                 } else {
                     throw new Error('Product already exists in wishlist');

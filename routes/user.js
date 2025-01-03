@@ -13,8 +13,6 @@ router.get("/", UserController.getUserById);
 // Update user role (accessible by admin only)
 router.put(
   "/:userId/role",
-  authenticateToken,
-  checkRole("admin"),
   UserController.updateUserRole
 );
 

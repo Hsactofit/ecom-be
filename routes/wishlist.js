@@ -14,15 +14,15 @@ router.get(
 // ======================= Private Routes =======================
 
 // Get wishlist for a user (authenticated route)
-router.get("/:userId", authenticateToken, wishlistController.getWishlist);
+router.get("/:userId", wishlistController.getWishlist);
 
 // Add a product to the wishlist (authenticated route)
-router.post("/", authenticateToken, wishlistController.addToWishlist);
+router.post("/", wishlistController.addToWishlist);
 
 // Remove a product from the wishlist (authenticated route)
-router.delete("/", authenticateToken, wishlistController.removeFromWishlist);
+router.delete("/", wishlistController.removeFromWishlist);
 
 // Clear the user's wishlist (authenticated route)
-router.delete("/:userId", authenticateToken, wishlistController.clearWishlist);
+router.delete("/:userId", wishlistController.clearWishlist);
 
 module.exports = router;

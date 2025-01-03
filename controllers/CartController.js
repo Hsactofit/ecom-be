@@ -130,6 +130,49 @@ const cartController = {
 
   async removeFromCart(req, res) {
     try {
+      const { userId, productId } = req.params;
+      const variantIndex = parseInt(req.params.variantIndex) || 0;
+      if (!userId || !productId || isNaN(variantIndex)) {
+        return res.status(400).json({
+          success: false,
+          message: "UserId, productId, and variantIndex are required",
+        });
+      }
+      const cart = await cartService.removeItem(
+        userId,
+        productId,
+        variantIndex
+      );
+      if (!cart || cart.items.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: "Cart is empty after removal",
+          data: [],
+          cartTotal: 0,
+        });
+      }
+
+      // Get updated cart with calculated totals
+      const updatedCart = await cartService.getUserCart(userId);
+
+      res.status(200).json({
+        success: true,
+        message: "Item removed from cart",
+        data: updatedCart.items,
+        cartTotal: updatedCart.cartTotal,
+      });
+    } catch (error) {
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Failed to remove item from cart",
+          error: error.message,
+        });
+    }
+  },
+  async removeFromCartInShop(req, res) {
+    try {
       const { userId, productId } = req.body;
       const variantIndex = parseInt(req.body.variantIndex) || 0;
       if (!userId || !productId || isNaN(variantIndex)) {
